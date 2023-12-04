@@ -83,19 +83,13 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 	// Finally set the first person camera as the main camera.
 	SDK3DVerse.setMainCamera(firstPersonCamera);
 
-	await setFPSCameraController(document.getElementById("display-canvas"));
-
 	const perso = await SDK3DVerse.engineAPI.findEntitiesByNames('Player');
 	window.addEventListener("keydown", actions);
 
 	SDK3DVerse.actionMap.values["JUMP"] = [["KEY_32"]];
+	SDK3DVerse.actionMap.propagate();
 
 	function actions() {
-		console.log(SDK3DVerse.getKey("V").down);
-		if (SDK3DVerse.getKey("V").down) {
-			const localTransform = perso[0].getComponent('local_transform');
-			console.log(localTransform.direction);
-			perso[0].setGlobalTransform({ position: [0, localTransform.position[1] + 2, 0] });
-		}
+		setFPSCameraController(document.getElementById("display-canvas"));
 	}
 }
