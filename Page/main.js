@@ -10,13 +10,12 @@ window.addEventListener("load", InitApp);
 
 //------------------------------------------------------------------------------
 async function InitApp() {
-	await SDK3DVerse.startSession({
+	await SDK3DVerse.joinOrStartSession({
 		userToken: publicToken,
 		sceneUUID: mainSceneUUID,
 		canvas: document.getElementById("display-canvas"),
 		connectToEditor: true,
 		startSimulation: "on-assets-loaded",
-
 	});
 
 	await InitFirstPersonController(characterControllerSceneUUID);
@@ -85,6 +84,16 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 
 	const perso = await SDK3DVerse.engineAPI.findEntitiesByNames('Player');
 	window.addEventListener("keydown", actions);
+
+	document.addEventListener('keyup', event => {
+		if (event.code === 'Space') {
+			//var pos = firstPersonController.getGlobalTransform();
+			var pos = SDK3DVerse.engineAPI.physicsRaycast(pos, dir, len)
+			console.log(pos)
+			//shoot raycast
+			
+		}
+	})
 
 	SDK3DVerse.actionMap.values["JUMP"] = [["KEY_32"]];
 	SDK3DVerse.actionMap.propagate();
