@@ -88,10 +88,7 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 	document.addEventListener('keyup', event => {
 		if (event.code === 'Space') {
 			//var pos = firstPersonController.getGlobalTransform();
-			var pos = SDK3DVerse.engineAPI.physicsRaycast(pos, dir, len)
-			console.log(pos)
-			//shoot raycast
-			
+			console.log("jump")
 		}
 	})
 
