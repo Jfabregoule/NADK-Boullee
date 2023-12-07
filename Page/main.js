@@ -10,6 +10,9 @@ window.addEventListener("load", InitApp);
 
 //------------------------------------------------------------------------------
 async function InitApp() {
+	const engineOutputEventUUID = "12f6542a-5405-4e7d-bce1-639c695dfdd4";
+	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
+
 	await SDK3DVerse.joinOrStartSession({
 		userToken: publicToken,
 		sceneUUID: mainSceneUUID,
@@ -85,12 +88,12 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 	const perso = await SDK3DVerse.engineAPI.findEntitiesByNames('Player');
 	window.addEventListener("keydown", actions);
 
-	document.addEventListener('keyup', event => {
-		if (event.code === 'Space') {
-			//var pos = firstPersonController.getGlobalTransform();
-			console.log("jump")
-		}
-	})
+	// document.addEventListener('keyup', event => {
+	// 	if (event.code === 'Space') {
+	// 		//var pos = firstPersonController.getGlobalTransform();
+	// 		console.log("jump")
+	// 	}
+	// })
 
 	SDK3DVerse.actionMap.values["JUMP"] = [["KEY_32"]];
 	SDK3DVerse.actionMap.propagate();
