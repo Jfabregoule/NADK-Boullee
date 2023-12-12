@@ -203,13 +203,11 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 			let FinalTransform = cameraTransform;
 			// Vérifie s'il y a des touches
 			if (touches && touches.length > 0 && touches[1] && touches[1].position) {
-				console.log(touches[1].position);
 			  let distance = Math.sqrt(
 				Math.pow(cameraTransform.position[0] - touches[1].position[0], 2) +
 				Math.pow(cameraTransform.position[1] - touches[1].position[1], 2) +
 				Math.pow(cameraTransform.position[2] - touches[1].position[2], 2)
 			  );
-			  console.log(distance);
 			  FinalTransform.scale = [1, 1, distance];
 			} else {
 			  // touches est undefined ou touches[0].position est undefined
@@ -243,7 +241,7 @@ async function InitObject(object){
 	const objectTemplate = new SDK3DVerse.EntityTemplate();
 	objectTemplate.attachComponent('mesh_ref', { value : object });
 	objectTemplate.attachComponent('material_ref', { value : "cf7f45ff-014b-4c2c-90fa-1deb01a2a4bb" });
-	
+
 	objectTemplate.attachComponent('physics_material');
 	objectTemplate.attachComponent('rigid_body',{mass : 1,centerOfMass :[0.5,0.5,0.5]});
 	objectTemplate.attachComponent('box_geometry',{dimension:[1,1,1],offset:[0.5,0.5,0.5]});
@@ -257,7 +255,7 @@ async function InitObject(object){
 		deleteOnClientDisconnection
 	);
 	//SDK3DVerse.engineAPI.assignClientToScripts(objectEntity);
-	objectEntity.setGlobalTransform({ position : [0, 0, 3] }); 	
+	objectEntity.setGlobalTransform({ position : [0, 0, 3] });
 	let transform = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getTransform();
 
 	var grab = 0
@@ -304,7 +302,7 @@ async function InitMirror(mirror){
 		deleteOnClientDisconnection
 	);
 
-  mirrorEntity.setGlobalTransform({ position : [0, 0, 5] }); 	
+  mirrorEntity.setGlobalTransform({ position : [0, 0, 5] });
 
 
   function boucle() {
@@ -323,7 +321,7 @@ async function InitEnemy(enemyUUID){
 
 	const interval = 1000;
 
-	
+
 	const parentEntity = Null;
 	const deleteOnClientDisconnection = true;
 
@@ -332,9 +330,9 @@ async function InitEnemy(enemyUUID){
 		parentEntity,
 		deleteOnClientDisconnection
 	);
-	enemyEntity.setGlobalTransform({ position : [0, 5, 3] }); 	
+	enemyEntity.setGlobalTransform({ position : [0, 5, 3] });
 	let transform = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getTransform();
-	
+
 	function moveEnemy(){
 			transform.position[2] += 2;
 			transform.position[1] += 1;
