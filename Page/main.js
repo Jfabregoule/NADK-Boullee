@@ -22,6 +22,7 @@ async function InitApp() {
 	await InitFirstPersonController(characterControllerSceneUUID);
 	await InitObject(objectMeshUUID);
   	await InitMirror(mirrorSceneUUID);
+	await InitEnemy(phantomMeshUUID);
 }
 
 
