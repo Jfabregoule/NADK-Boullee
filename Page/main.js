@@ -46,6 +46,7 @@ async function setFPSCameraController(canvas){
 
 //------------------------------------------------------------------------------
 async function InitFirstPersonController(charCtlSceneUUID) {
+	console.log("hellow world");
 	// To spawn an entity we need to create an EntityTempllate and specify the
 	// components we want to attach to it. In this case we only want a scene_ref
 	// that points to the character controller scene.
@@ -92,6 +93,27 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 	lightTemplate.attachComponent('local_transform', { position : [0, 0, 0] });
 
 	const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
+
+	document.addEventListener('keyup',(event)=>{
+		if(event.key == 'r'){
+			console.log("casting ray");
+			castRay();
+		}
+	})
+
+//// RAYCAST FUNCTION ////
+async function castRay(){
+	const cam = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0]
+			
+	const modulo = cam.getTransform.orientation % 360;
+	const pos = cam.getTransform.position;
+	const result = await SDK3DVerse.engineAPI.physicsRaycast(pos + (0.0, 2.0, 0.0), (Math.sin(modulo), 0.0, Math.cos(modulo)), 2.0);
+	if(result){
+		console.log("Racast 2 good: ",result);
+	}
+	return result;
+}
+
 
 /*
 ---------------------------------------------------------------------------------------------
