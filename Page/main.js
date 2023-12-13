@@ -3,6 +3,9 @@ import {
 	publicToken,
 	mainSceneUUID,
 	characterControllerSceneUUID,
+	objectMeshUUID,
+	mirrorSceneUUID,
+	phantomMeshUUID,
 } from "./config.js";
 
 //------------------------------------------------------------------------------
@@ -104,7 +107,7 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 //// RAYCAST FUNCTION ////
 async function castRay(){
 	const cam = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0]
-			
+
 	const modulo = cam.getTransform.orientation % 360;
 	const pos = cam.getTransform.position;
 	const result = await SDK3DVerse.engineAPI.physicsRaycast(pos + (0.0, 2.0, 0.0), (Math.sin(modulo), 0.0, Math.cos(modulo)), 2.0);
@@ -344,7 +347,7 @@ async function InitEnemy(enemyUUID){
 	const interval = 1000;
 
 
-	const parentEntity = Null;
+	const parentEntity = null;
 	const deleteOnClientDisconnection = true;
 
 	const enemyEntity = await enemyTemplate.instantiateTransientEntity(
