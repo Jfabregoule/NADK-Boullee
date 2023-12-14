@@ -365,17 +365,14 @@ async function Game(){
 			const rayLength = 1;
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
-
-			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-
-			if (touches.length > 0)
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
+			if (touches.length > 0 /*&& touches[0].entity.getNames() == "TriggerCube"*/)
 			{
-				grabbedEntity = touches[0].entity;
+				grabbedEntity = touches[0].entity.getChildren[0];
 				grabbedEntity.detachComponent('rigid_body');
 				isGrabbing = true;
 			}
-
-			console.log(touches[0]);
+			//console.log(touches[0]);
 		}
 	}
 
