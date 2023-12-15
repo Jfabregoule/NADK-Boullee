@@ -90,7 +90,7 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 	// To spawn an entity we need to create an EntityTempllate and specify the
 	// components we want to attach to it. In this case we only want a scene_ref
 	// that points to the character controller scene.
-	const playerTemplate = new SDK3DVerse.EntityTemplate();
+	const playerTemplate = new SDK3DVerse.EntityTemplate();+
 	playerTemplate.attachComponent("scene_ref", { value: charCtlSceneUUID });
 
 	// Passing null as parent entity will instantiate our new entity at the root
@@ -194,10 +194,11 @@ async function Game(){
 	lightTemplate.attachComponent('local_transform', { position : [0, 0, 0] });
 
 	const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
+	console.log(lights.length);
 
 	let isShooting;
 
-	async function		isInLight(){
+	async function	isInLight(){
 
 		for (let i = 0; i < lights.length; i++)
 		{
