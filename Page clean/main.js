@@ -55,6 +55,11 @@ async function InitApp() {
 	//await InitObject(objectMeshUUID);
 	//await InitMirror(mirrorSceneUUID);
 	//await InitEnemy(phantomMeshUUID);
+
+	// init console log for C++
+	const engineOutputEventUUID = "9d62edc3-d096-40fd-ba7d-60550c050cf1";
+	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
+	
 	await Game();
 }
 

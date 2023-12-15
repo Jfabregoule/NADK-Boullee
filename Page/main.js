@@ -26,6 +26,9 @@ async function InitApp() {
 	await InitObject(objectMeshUUID);
   	await InitMirror(mirrorSceneUUID);
 	await InitEnemy(phantomMeshUUID);
+	// init console log for C++
+	const engineOutputEventUUID = "9d62edc3-d096-40fd-ba7d-60550c050cf1";
+	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
 }
 
 
@@ -49,7 +52,6 @@ async function setFPSCameraController(canvas){
 
 //------------------------------------------------------------------------------
 async function InitFirstPersonController(charCtlSceneUUID) {
-	console.log("hellow world");
 	// To spawn an entity we need to create an EntityTempllate and specify the
 	// components we want to attach to it. In this case we only want a scene_ref
 	// that points to the character controller scene.
