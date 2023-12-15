@@ -346,9 +346,6 @@ async function InitEnemy(enemyUUID){
 
 	enemyTemplate.attachComponent('physics_material');
 
-	const interval = 1000;
-
-
 	const parentEntity = null;
 	const deleteOnClientDisconnection = true;
 
@@ -358,12 +355,12 @@ async function InitEnemy(enemyUUID){
 		deleteOnClientDisconnection
 	);
 	enemyEntity.setGlobalTransform({ position : [0, 5, 3] });
-	let transform = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getTransform();
+	let transform = enemyEntity.getGlobalTransform();
 
 	function moveEnemy(){
-			transform.position[2] += 2;
-			transform.position[1] += 1;
-			transform.orientation = [0,0,0,1];
+			transform.position[2] += 0.02;
+			transform.position[1] += 0.02;
+			transform.position[0] += 0.02;
 		enemyEntity.setGlobalTransform(transform);
 	}
 	function boucle() {
@@ -373,3 +370,4 @@ async function InitEnemy(enemyUUID){
 	}
 	window.requestAnimationFrame(boucle);
 }
+
