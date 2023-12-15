@@ -59,7 +59,7 @@ async function InitApp() {
 	// init console log for C++
 	const engineOutputEventUUID = "9d62edc3-d096-40fd-ba7d-60550c050cf1";
 	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
-	
+
 	await Game();
 }
 
@@ -202,23 +202,39 @@ async function Game(){
 	console.log(lights.length);
 
 	let isShooting;
+	const actionQueue = [];
 
-	async function	isInLight(){
+	window.requestAnimationFrame(actionQueueLoop);
+	async function actionQueueLoop() {
+	if(!actionQueue.length) {
+		window.requestAnimationFrame(actionQueueLoop);
+		return;
+	}
 
-		for (let i = 0; i < lights.length; i++)
+	const action = actionQueue.shift();
+	await action();
+	window.requestAnimationFrame(actionQueueLoop);
+}
+
+async function	isInLight(){
+	for (let i = 0; i < lights.length; i++)
+	{
+		let battle_light = lights[i];
+		for (let j = 0; j < SDK3DVerse.engineAPI.cameraAPI.getActiveViewports().length; j++)
 		{
-			let battle_light = lights[i];
 			isShooting = false;
+			let camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[j];
 			SDK3DVerse.engineAPI.onEnterTrigger((camera, battle_light) =>
 			{
-				createfocusedbeam();
+			actionQueue.push(() => createfocusedbeam(j));
 			});
 			SDK3DVerse.engineAPI.onExitTrigger((camera, battle_light) =>
 			{
-				destroyfocusedbeam();
+				actionQueue.push(() => destroyfocusedbeam(j));
 			});
 		}
 	}
+}
 
 	async function	createfocusedbeam(){
 		console.log("create");
@@ -326,12 +342,20 @@ async function Game(){
 */
 	let isGrabbing = false;
 	let grabbedEntity;
+	let grabbable = [];
 
 	document.addEventListener('keyup',(event)=>{
 		if(event.key == 'f'){
 			Grab();
 		}
 	})
+
+	async function InitGrabbable(){
+		const cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('TriggerCube');
+		grabbable.push(...cubes);
+	}
+
+	await InitGrabbable();
 
 	async function Grab(){
 		if (isGrabbing == true)
@@ -374,7 +398,7 @@ async function Game(){
 
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
 
-			if (touches.length > 0)
+			if (touches.length > 0 && grabbable.includes(touches[0].entity))
 			{
 				grabbedEntity = touches[0].entity;
 				grabbedEntity.detachComponent('rigid_body');
