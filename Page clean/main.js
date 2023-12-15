@@ -321,6 +321,8 @@ async function Game(){
 	let isGrabbing = false;
 	let grabbedEntity;
 	let triggerEntity;
+	let lastGrabbed;
+	let lastTrigger;
 
 	document.addEventListener('keyup',(event)=>{
 		if(event.key == 'f'){
@@ -332,13 +334,22 @@ async function Game(){
 		if (isGrabbing == true)
 		{
 			console.log("Detach");
-			grabbedEntity.attachComponent('rigid_body');
+			grabbedEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
+			//triggerEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
+			//triggerEntity.setComponent('physics_material', ({'isTrigger': false}));
+			lastGrabbed = grabbedEntity;
+			lastTrigger = triggerEntity;
 			grabbedEntity = null;
 			triggerEntity = null;
 			isGrabbing = false;
 		}
 		else if (isGrabbing == false)
 		{
+			if (lastTrigger != null){
+				//lastTrigger.setComponent('physics_material', ({'isTrigger': true}));
+				//triggerEntity.detachComponent('rigid_body');
+			}
+			
 			const cameraTransform = camera.getTransform();
 
 			// dirVect
@@ -368,7 +379,6 @@ async function Game(){
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
-			console.log(await touches[0])
 			if (touches.length > 0 && touches[0].entity.getName() == "TriggerCube")
 			{
 				grabbedEntity = (await touches[0].entity.getChildren())[0];
