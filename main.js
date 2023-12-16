@@ -52,9 +52,7 @@ async function InitApp() {
 	});
 	await SDK3DVerse.engineAPI.startSimulation();
 	await InitFirstPersonController(characterControllerSceneUUID);
-	const backgroundMusic = document.getElementById("backgroundMusic");
-	backgroundMusic.volume = 0.1;
-	await backgroundMusic.play();
+
 	//await InitObject(objectMeshUUID);
 	//await InitMirror(mirrorSceneUUID);
 	//await InitEnemy(phantomMeshUUID);
@@ -492,6 +490,10 @@ async function Game(){
 		//await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [-3.007635, 5.210598, 68.501045], camera.getTransform().orientation, 1, camera.getTransform().position, camera.getTransform().orientation);
 		//camera.setTransform(transform);
 	}
+
+	const backgroundMusic = document.getElementById("backgroundMusic");
+	backgroundMusic.volume = 0.1;
+	await backgroundMusic.play();
 
 /*
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
