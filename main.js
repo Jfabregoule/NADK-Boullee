@@ -37,6 +37,11 @@ import {
 ---------------------------------------------------------------------------------------------
 */
 
+// Démarrer la musique
+const backgroundMusic = document.getElementById("backgroundMusic");
+backgroundMusic.volume = 0.1;
+backgroundMusic.play();
+
 window.addEventListener("load", InitApp);
 
 //------------------------------------------------------------------------------
@@ -133,10 +138,6 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 
 	document.addEventListener('mousedown', (event) => {
 	setFPSCameraController(document.getElementById("display-canvas"));
-	// Démarrer la musique
-	const backgroundMusic = document.getElementById("backgroundMusic");
-	backgroundMusic.volume = 0.1;
-	backgroundMusic.play();
 });
 }
 
