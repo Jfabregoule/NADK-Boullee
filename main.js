@@ -37,11 +37,6 @@ import {
 ---------------------------------------------------------------------------------------------
 */
 
-// Démarrer la musique
-const backgroundMusic = document.getElementById("backgroundMusic");
-backgroundMusic.volume = 0.1;
-backgroundMusic.play();
-
 window.addEventListener("load", InitApp);
 
 //------------------------------------------------------------------------------
@@ -64,7 +59,10 @@ async function InitApp() {
 	// init console log for C++
 	const engineOutputEventUUID = "9d62edc3-d096-40fd-ba7d-60550c050cf1";
 	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
-
+	// Démarrer la musique
+	const backgroundMusic = document.getElementById("backgroundMusic");
+	backgroundMusic.volume = 0.1;
+	backgroundMusic.play();
 	await Game();
 }
 
