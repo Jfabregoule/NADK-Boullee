@@ -185,10 +185,14 @@ async function Game(){
 /*
 ---------------------------------------------------------------------------------------------
 |																							|
-|										Beam												|
+|											Inits											|
 |																							|
 ---------------------------------------------------------------------------------------------
 */
+
+	let hasSeenCinematic = false;
+	let isShooting;
+	const actionQueue = [];
 
 	const persos = await SDK3DVerse.engineAPI.findEntitiesByNames('Player');
 	const perso = persos[0];
@@ -199,10 +203,48 @@ async function Game(){
 	lightTemplate.attachComponent('local_transform', { position : [0, 0, 0] });
 
 	const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
-	console.log(lights.length);
 
-	let isShooting;
-	const actionQueue = [];
+/*
+---------------------------------------------------------------------------------------------
+|																							|
+|										Collisions											|
+|																							|
+---------------------------------------------------------------------------------------------
+*/
+
+	async function	checkColls(){
+
+		let players = await SDK3DVerse.engineAPI.findEntitiesByNames('First Person Controller');
+		let player = players[0];
+		let tmp = await SDK3DVerse.engineAPI.findEntitiesByNames('Cinematic trigger');
+		let cinematicTrigger = tmp[0];
+			isShooting = false;
+			SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) =>
+			{
+				if (entering == player && zone == lights[0])
+					actionQueue.push(() => createfocusedbeam());
+				else if (entering == player && zone == cinematicTrigger && !hasSeenCinematic)
+				{
+					console.log("Cinematic");
+					PlayCinematic();
+					hasSeenCinematic = true;
+				}
+			});
+			SDK3DVerse.engineAPI.onExitTrigger((exiting, zone) =>
+			{
+				if (exiting == player && zone == lights[0])
+					actionQueue.push(() => destroyfocusedbeam());
+			});
+	}
+	await checkColls();
+
+/*
+---------------------------------------------------------------------------------------------
+|																							|
+|										Beam												|
+|																							|
+---------------------------------------------------------------------------------------------
+*/
 
 	window.requestAnimationFrame(actionQueueLoop);
 	async function actionQueueLoop() {
@@ -214,27 +256,7 @@ async function Game(){
 	const action = actionQueue.shift();
 	await action();
 	window.requestAnimationFrame(actionQueueLoop);
-}
-
-async function	isInLight(){
-	for (let i = 0; i < lights.length; i++)
-	{
-		let battle_light = lights[i];
-		for (let j = 0; j < SDK3DVerse.engineAPI.cameraAPI.getActiveViewports().length; j++)
-		{
-			isShooting = false;
-			let camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[j];
-			SDK3DVerse.engineAPI.onEnterTrigger((camera, battle_light) =>
-			{
-			actionQueue.push(() => createfocusedbeam(j));
-			});
-			SDK3DVerse.engineAPI.onExitTrigger((camera, battle_light) =>
-			{
-				actionQueue.push(() => destroyfocusedbeam(j));
-			});
-		}
 	}
-}
 
 	async function	createfocusedbeam(){
 		console.log("create");
@@ -331,7 +353,6 @@ async function	isInLight(){
 			children[2].setGlobalTransform(FinalTransform);
 		}
 	}
-	await isInLight();
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -439,6 +460,20 @@ async function	isInLight(){
 	}
 
 /*
+---------------------------------------------------------------------------------------------
+|																							|
+|									Cinematic												|
+|																							|
+---------------------------------------------------------------------------------------------
+*/
+
+	async function PlayCinematic(){
+		//let transform = camera.getTransform();
+		//await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [-3.007635, 5.210598, 68.501045], camera.getTransform().orientation, 1, camera.getTransform().position, camera.getTransform().orientation);
+		//camera.setTransform(transform);
+	}
+
+/*
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 |																																						|
 |																																						|
@@ -453,6 +488,7 @@ async function	isInLight(){
 */
 
 	function loop() {
+		//console.log(camera.getTransform().orientation)
 		movefocusedbeam();
 		if (isGrabbing)
 			moveGrabbed();
