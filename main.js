@@ -210,6 +210,21 @@ async function Game(){
 	backgroundMusic.volume = 0.1;
 	backgroundMusic.play();
 
+	isShooting = false;
+
+	let tmp = await SDK3DVerse.engineAPI.findEntitiesByNames('Cinematic trigger');
+	let FirstCinematicTrigger = tmp[0];
+
+	let cubeBox = await SDK3DVerse.engineAPI.findEntitiesByNames('Cube box');
+
+	let triggerBoxes = await SDK3DVerse.engineAPI.findEntitiesByNames('Battle_light');
+	triggerBoxes.push(...tmp);
+	triggerBoxes.push(...cubeBox);
+
+	let isGrabbing = false;
+	let grabbedEntity;
+	let grabbable = [];
+
 /*
 ---------------------------------------------------------------------------------------------
 |																							|
@@ -220,14 +235,11 @@ async function Game(){
 
 	async function	checkColls(){
 
-		let tmp = await SDK3DVerse.engineAPI.findEntitiesByNames('Cinematic trigger');
-		let cinematicTrigger = tmp[0];
-			isShooting = false;
 			SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) =>
 			{
 				if (entering == player && zone == lights[0])
 					actionQueue.push(() => createfocusedbeam());
-				else if (entering == player && zone == cinematicTrigger && !hasSeenCinematic)
+				else if (entering == player && zone == FirstCinematicTrigger && !hasSeenCinematic)
 				{
 					console.log("Cinematic");
 					PlayCinematic();
@@ -236,6 +248,11 @@ async function Game(){
 			});
 			SDK3DVerse.engineAPI.onExitTrigger((exiting, zone) =>
 			{
+				if (grabbable.includes(exiting) && cubeBox.includes(zone))
+				{
+					console.log("TEST");
+					exiting.setGlobalTransform({position : [0, 0, 0]});
+				}
 				if (exiting == player && zone == lights[0])
 					actionQueue.push(() => destroyfocusedbeam());
 			});
@@ -340,7 +357,7 @@ async function Game(){
 			// Calcule de la taille du rayon
 			let FinalTransform = cameraTransform;
 			// Vérifie s'il y a des touches
-			if (touches && touches.length > 0 && (lights.includes(touches[0].entity || players.includes(touches[0].entity))))
+			while(touches && touches.length > 0 && (triggerBoxes.includes(touches[0].entity) || players.includes(touches[0].entity)))
 				touches.shift();
 
 			if (touches && touches.length > 0 && touches[0] && touches[0].position) {
@@ -367,14 +384,18 @@ async function Game(){
 ---------------------------------------------------------------------------------------------
 */
 
-	let isGrabbing = false;
-	let grabbedEntity;
-
 	document.addEventListener('keyup',(event)=>{
 		if(event.key == 'f'){
 			Grab();
 		}
 	})
+
+	async function InitGrabbable(){
+		let cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('cubeEntity');
+		grabbable.push(...cubes);
+	}
+
+	InitGrabbable();
 
 	async function Grab(){
 		if (isGrabbing == true)
@@ -418,7 +439,7 @@ async function Game(){
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
-			if (block != null)
+			if (block != null && grabbable.includes(block.entity))
 			{
 				if (await block.entity.getName() == "cubeEntity")
 				{
