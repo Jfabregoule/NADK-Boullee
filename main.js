@@ -325,7 +325,7 @@ async function Game(){
 			];
 
 			const rayLength = 100;
-			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
 
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
@@ -361,9 +361,9 @@ async function Game(){
 |																							|
 ---------------------------------------------------------------------------------------------
 */
+
 	let isGrabbing = false;
 	let grabbedEntity;
-	let grabbable = [];
 
 	document.addEventListener('keyup',(event)=>{
 		if(event.key == 'f'){
@@ -371,23 +371,20 @@ async function Game(){
 		}
 	})
 
-	async function InitGrabbable(){
-		const cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('TriggerCube');
-		grabbable.push(...cubes);
-	}
-
-	await InitGrabbable();
-
 	async function Grab(){
 		if (isGrabbing == true)
 		{
 			console.log("Detach");
-			grabbedEntity.attachComponent('rigid_body');
+			grabbedEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
+			//triggerEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
+			//triggerEntity.setComponent('physics_material', ({'isTrigger': false}));
 			grabbedEntity = null;
+			//triggerEntity = null;
 			isGrabbing = false;
 		}
 		else if (isGrabbing == false)
 		{
+
 			const cameraTransform = camera.getTransform();
 
 			// dirVect
@@ -416,17 +413,18 @@ async function Game(){
 			const rayLength = 1;
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
-
-			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-
-			if (touches.length > 0 && grabbable.includes(touches[0].entity))
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
+			if (block != null)
 			{
-				grabbedEntity = touches[0].entity;
-				grabbedEntity.detachComponent('rigid_body');
-				isGrabbing = true;
+				console.log(block);
+				if (await block.entity.getName() == "cubeEntity")
+				{
+					grabbedEntity = (await block.entity);
+					//triggerEntity = (await block);
+					grabbedEntity.detachComponent('rigid_body');
+					isGrabbing = true;
+				}
 			}
-
-			console.log(touches[0]);
 		}
 	}
 
@@ -451,9 +449,9 @@ async function Game(){
 			];
 
 			const pos = [
-			cameraTransform.position[0] + directionVector[0] * 2, // Multiplie par la distance souhaitée
-			cameraTransform.position[1] + directionVector[1] * 2,
-			cameraTransform.position[2] + directionVector[2] * 2
+				(cameraTransform.position[0] + directionVector[0] * 2) -0.5, // Multiplie par la distance souhaitée
+				cameraTransform.position[1] + directionVector[1] * 2 - 0.5,
+				(cameraTransform.position[2] + directionVector[2] * 2)- 0.5
 			];
 
 			grabbedEntity.setGlobalTransform({position : pos});
