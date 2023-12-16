@@ -52,6 +52,9 @@ async function InitApp() {
 	});
 	await SDK3DVerse.engineAPI.startSimulation();
 	await InitFirstPersonController(characterControllerSceneUUID);
+	const backgroundMusic = document.getElementById("backgroundMusic");
+	backgroundMusic.volume = 0.1;
+	await backgroundMusic.play();
 	//await InitObject(objectMeshUUID);
 	//await InitMirror(mirrorSceneUUID);
 	//await InitEnemy(phantomMeshUUID);
@@ -60,9 +63,6 @@ async function InitApp() {
 	const engineOutputEventUUID = "9d62edc3-d096-40fd-ba7d-60550c050cf1";
 	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
 	// Démarrer la musique
-	const backgroundMusic = document.getElementById("backgroundMusic");
-	backgroundMusic.volume = 0.1;
-	backgroundMusic.play();
 	await Game();
 }
 
