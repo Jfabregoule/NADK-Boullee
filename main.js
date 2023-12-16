@@ -40,7 +40,6 @@ import {
 window.addEventListener("load", InitApp);
 
 //------------------------------------------------------------------------------
-
 async function InitApp() {
 	await SDK3DVerse.startSession({
 		userToken: publicToken,
@@ -137,6 +136,7 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 	});
 	document.addEventListener('mousedown', () => {
 		const backgroundMusic = document.getElementById("backgroundMusic");
+		backgroundMusic.volume = 0.1;
 		backgroundMusic.play();
 	});
 }
