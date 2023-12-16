@@ -91,7 +91,6 @@ async function setFPSCameraController(canvas){
 
 //------------------------------------------------------------------------------
 async function InitFirstPersonController(charCtlSceneUUID) {
-	console.log("hellow world");
 	// To spawn an entity we need to create an EntityTempllate and specify the
 	// components we want to attach to it. In this case we only want a scene_ref
 	// that points to the character controller scene.
@@ -259,7 +258,6 @@ async function Game(){
 	}
 
 	async function	createfocusedbeam(){
-		console.log("create");
 
 		const children = await perso.getChildren();
 
@@ -276,7 +274,6 @@ async function Game(){
 	}
 
 	async function destroyfocusedbeam() {
-		console.log("destroy");
 
 		const children = await perso.getChildren();
 
@@ -319,9 +316,9 @@ async function Game(){
 			];
 
 			const origin = [
-			cameraTransform.position[0] + directionVector[0] * 4, // Multiplie par la distance souhaitée
+			cameraTransform.position[0] + directionVector[0], // Multiplie par la distance souhaitée
 			cameraTransform.position[1] - 0.5,
-			cameraTransform.position[2] + directionVector[2] * 4
+			cameraTransform.position[2] + directionVector[2]
 			];
 
 			const rayLength = 100;
@@ -338,11 +335,13 @@ async function Game(){
 			// Calcule de la taille du rayon
 			let FinalTransform = cameraTransform;
 			// Vérifie s'il y a des touches
-			if (touches && touches.length > 0 && touches[1] && touches[1].position) {
+			if (touches && touches.length > 0 && lights.includes(touches[0].entity))
+				touches.shift();
+			if (touches && touches.length > 0 && touches[0] && touches[0].position) {
 				let distance = Math.sqrt(
-					Math.pow(cameraTransform.position[0] - touches[1].position[0], 2) +
-					Math.pow(cameraTransform.position[1] - touches[1].position[1], 2) +
-					Math.pow(cameraTransform.position[2] - touches[1].position[2], 2)
+					Math.pow(cameraTransform.position[0] - touches[0].position[0], 2) +
+					Math.pow(cameraTransform.position[1] - touches[0].position[1], 2) +
+					Math.pow(cameraTransform.position[2] - touches[0].position[2], 2)
 				);
 				FinalTransform.scale = [1, 1, distance];
 			} else {
@@ -374,7 +373,6 @@ async function Game(){
 	async function Grab(){
 		if (isGrabbing == true)
 		{
-			console.log("Detach");
 			grabbedEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
 			//triggerEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
 			//triggerEntity.setComponent('physics_material', ({'isTrigger': false}));
@@ -416,7 +414,6 @@ async function Game(){
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
 			if (block != null)
 			{
-				console.log(block);
 				if (await block.entity.getName() == "cubeEntity")
 				{
 					grabbedEntity = (await block.entity);
@@ -486,11 +483,9 @@ async function Game(){
 */
 
 	function loop() {
-		//console.log(camera.getTransform().orientation)
 		movefocusedbeam();
 		if (isGrabbing)
 			moveGrabbed();
-		//setFPSCameraController(document.getElementById("display-canvas"));
 		window.requestAnimationFrame(loop);
 	}
 	window.requestAnimationFrame(loop);
