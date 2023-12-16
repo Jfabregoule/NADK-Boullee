@@ -205,6 +205,11 @@ async function Game(){
 
 	const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
 
+	// Démarrer la musique
+	const backgroundMusic = document.getElementById("backgroundMusic");
+	backgroundMusic.volume = 0.1;
+	backgroundMusic.play();
+
 /*
 ---------------------------------------------------------------------------------------------
 |																							|
@@ -335,8 +340,9 @@ async function Game(){
 			// Calcule de la taille du rayon
 			let FinalTransform = cameraTransform;
 			// Vérifie s'il y a des touches
-			if (touches && touches.length > 0 && (lights.includes(touches[0].entity) || players.includes(touches[0].entity)))
+			if (touches && touches.length > 0 && (lights.includes(touches[0].entity || players.includes(touches[0].entity))))
 				touches.shift();
+
 			if (touches && touches.length > 0 && touches[0] && touches[0].position) {
 				let distance = Math.sqrt(
 					Math.pow(cameraTransform.position[0] - touches[0].position[0], 2) +
