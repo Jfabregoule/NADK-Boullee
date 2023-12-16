@@ -329,7 +329,7 @@ async function InitMirror(mirror){
 		deleteOnClientDisconnection
 	);
 
-  mirrorEntity.setGlobalTransform({ position : [0, 0, 5] });
+  mirrorEntity.setGlobalTransform({ position : [0, 10, 5] });
 
 
   function boucle() {
@@ -354,14 +354,51 @@ async function InitEnemy(enemyUUID){
 		parentEntity,
 		deleteOnClientDisconnection
 	);
-	enemyEntity.setGlobalTransform({ position : [0, 5, 3] });
-	let transform = enemyEntity.getGlobalTransform();
+	enemyEntity.setGlobalTransform({ position : [0, 1, 0] });
 
-	function moveEnemy(){
-			transform.position[2] += 0.02;
-			transform.position[1] += 0.02;
-			transform.position[0] += 0.02;
+	let transform = enemyEntity.getGlobalTransform();
+	let direction = 0;
+	let speed = 0.02;
+
+	async function moveEnemy(){
+	
+		let directionTable = {
+			0 : [speed, 0, 0],
+			1 : [0, 0, speed],
+			2 : [-speed, 0, 0],
+			3 : [0, 0, -speed]
+		}
+
+		transform.position[0] += directionTable[direction][0];
+		transform.position[1] += directionTable[direction][1];
+		transform.position[2] += directionTable[direction][2];
 		enemyEntity.setGlobalTransform(transform);
+		
+		// dirVect
+		let directionVector = [
+			directionTable[direction][0] * 1 / speed, // X
+			directionTable[direction][1], 			  // Y
+			directionTable[direction][2] * 1 / speed  // Z
+		];
+
+		console.log(directionVector);
+
+		const origin = [
+			transform.position[0],
+			transform.position[1],
+			transform.position[2]
+		];
+
+		const rayLength = 0.0001;
+		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+		// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
+
+		const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
+
+		if (touches.length > 0)
+		{
+			direction = (direction + 1) % 4;
+		}
 	}
 	function boucle() {
 		moveEnemy();
