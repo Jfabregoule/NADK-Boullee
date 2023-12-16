@@ -332,8 +332,6 @@ async function Game(){
 		{
 			console.log("Detach");
 			grabbedEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
-			//triggerEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
-			//triggerEntity.setComponent('physics_material', ({'isTrigger': false}));
 			grabbedEntity = null;
 			//triggerEntity = null;
 			isGrabbing = false;
@@ -404,10 +402,10 @@ async function Game(){
 				-directionVector[2] / magnitude
 			];
 
-			const pos = [
-			cameraTransform.position[0] + directionVector[0] * 2, // Multiplie par la distance souhaitée
-			cameraTransform.position[1] + directionVector[1] * 2,
-			cameraTransform.position[2] + directionVector[2] * 2
+			(const pos = [
+			(cameraTransform.position[0] + directionVector[0] * 2) -0.5, // Multiplie par la distance souhaitée
+			(cameraTransform.position[1] + directionVector[1] * 2) -0.5,
+			(cameraTransform.position[2] + directionVector[2] * 2)- 0.5
 			];
 
 			grabbedEntity.setGlobalTransform({position : pos});
