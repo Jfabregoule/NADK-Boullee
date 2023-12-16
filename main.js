@@ -195,6 +195,8 @@ async function Game(){
 
 	const persos = await SDK3DVerse.engineAPI.findEntitiesByNames('Player');
 	const perso = persos[0];
+	let players = await SDK3DVerse.engineAPI.findEntitiesByNames('First Person Controller');
+	let player = players[0];
 	const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
 
 	const lightTemplate = new SDK3DVerse.EntityTemplate();
@@ -213,8 +215,6 @@ async function Game(){
 
 	async function	checkColls(){
 
-		let players = await SDK3DVerse.engineAPI.findEntitiesByNames('First Person Controller');
-		let player = players[0];
 		let tmp = await SDK3DVerse.engineAPI.findEntitiesByNames('Cinematic trigger');
 		let cinematicTrigger = tmp[0];
 			isShooting = false;
@@ -335,7 +335,7 @@ async function Game(){
 			// Calcule de la taille du rayon
 			let FinalTransform = cameraTransform;
 			// Vérifie s'il y a des touches
-			if (touches && touches.length > 0 && lights.includes(touches[0].entity))
+			if (touches && touches.length > 0 && (lights.includes(touches[0].entity) || players.includes(touches[0].entity)))
 				touches.shift();
 			if (touches && touches.length > 0 && touches[0] && touches[0].position) {
 				let distance = Math.sqrt(
