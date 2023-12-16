@@ -134,7 +134,11 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 
 	document.addEventListener('mousedown', (event) => {
 	setFPSCameraController(document.getElementById("display-canvas"));
-});
+	});
+	document.addEventListener('mousedown', () => {
+		const backgroundMusic = document.getElementById("backgroundMusic");
+		backgroundMusic.play();
+	});
 }
 
 /*
@@ -490,10 +494,6 @@ async function Game(){
 		//await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [-3.007635, 5.210598, 68.501045], camera.getTransform().orientation, 1, camera.getTransform().position, camera.getTransform().orientation);
 		//camera.setTransform(transform);
 	}
-
-	const backgroundMusic = document.getElementById("backgroundMusic");
-	backgroundMusic.volume = 0.1;
-	await backgroundMusic.play();
 
 /*
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
