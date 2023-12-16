@@ -133,6 +133,10 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 
 	document.addEventListener('mousedown', (event) => {
 	setFPSCameraController(document.getElementById("display-canvas"));
+	// Démarrer la musique
+	const backgroundMusic = document.getElementById("backgroundMusic");
+	backgroundMusic.volume = 0.1;
+	backgroundMusic.play();
 });
 }
 
@@ -204,11 +208,6 @@ async function Game(){
 	lightTemplate.attachComponent('local_transform', { position : [0, 0, 0] });
 
 	const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
-
-	// Démarrer la musique
-	const backgroundMusic = document.getElementById("backgroundMusic");
-	backgroundMusic.volume = 0.1;
-	backgroundMusic.play();
 
 	isShooting = false;
 
