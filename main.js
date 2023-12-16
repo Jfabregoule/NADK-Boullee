@@ -59,7 +59,7 @@ async function InitApp() {
 	// init console log for C++
 	const engineOutputEventUUID = "9d62edc3-d096-40fd-ba7d-60550c050cf1";
 	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
-	
+
 	await Game();
 }
 
@@ -91,11 +91,10 @@ async function setFPSCameraController(canvas){
 
 //------------------------------------------------------------------------------
 async function InitFirstPersonController(charCtlSceneUUID) {
-	console.log("hellow world");
 	// To spawn an entity we need to create an EntityTempllate and specify the
 	// components we want to attach to it. In this case we only want a scene_ref
 	// that points to the character controller scene.
-	const playerTemplate = new SDK3DVerse.EntityTemplate();
+	const playerTemplate = new SDK3DVerse.EntityTemplate();+
 	playerTemplate.attachComponent("scene_ref", { value: charCtlSceneUUID });
 
 	// Passing null as parent entity will instantiate our new entity at the root
@@ -185,13 +184,19 @@ async function Game(){
 /*
 ---------------------------------------------------------------------------------------------
 |																							|
-|										Beam												|
+|											Inits											|
 |																							|
 ---------------------------------------------------------------------------------------------
 */
 
+	let hasSeenCinematic = false;
+	let isShooting;
+	const actionQueue = [];
+
 	const persos = await SDK3DVerse.engineAPI.findEntitiesByNames('Player');
 	const perso = persos[0];
+	let players = await SDK3DVerse.engineAPI.findEntitiesByNames('First Person Controller');
+	let player = players[0];
 	const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
 
 	const lightTemplate = new SDK3DVerse.EntityTemplate();
@@ -200,27 +205,59 @@ async function Game(){
 
 	const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
 
-	let isShooting;
+/*
+---------------------------------------------------------------------------------------------
+|																							|
+|										Collisions											|
+|																							|
+---------------------------------------------------------------------------------------------
+*/
 
-	async function		isInLight(){
+	async function	checkColls(){
 
-		for (let i = 0; i < lights.length; i++)
-		{
-			let battle_light = lights[i];
+		let tmp = await SDK3DVerse.engineAPI.findEntitiesByNames('Cinematic trigger');
+		let cinematicTrigger = tmp[0];
 			isShooting = false;
-			SDK3DVerse.engineAPI.onEnterTrigger((camera, battle_light) =>
+			SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) =>
 			{
-				createfocusedbeam();
+				if (entering == player && zone == lights[0])
+					actionQueue.push(() => createfocusedbeam());
+				else if (entering == player && zone == cinematicTrigger && !hasSeenCinematic)
+				{
+					console.log("Cinematic");
+					PlayCinematic();
+					hasSeenCinematic = true;
+				}
 			});
-			SDK3DVerse.engineAPI.onExitTrigger((camera, battle_light) =>
+			SDK3DVerse.engineAPI.onExitTrigger((exiting, zone) =>
 			{
-				destroyfocusedbeam();
+				if (exiting == player && zone == lights[0])
+					actionQueue.push(() => destroyfocusedbeam());
 			});
-		}
+	}
+	await checkColls();
+
+/*
+---------------------------------------------------------------------------------------------
+|																							|
+|										Beam												|
+|																							|
+---------------------------------------------------------------------------------------------
+*/
+
+	window.requestAnimationFrame(actionQueueLoop);
+	async function actionQueueLoop() {
+	if(!actionQueue.length) {
+		window.requestAnimationFrame(actionQueueLoop);
+		return;
+	}
+
+	const action = actionQueue.shift();
+	await action();
+	window.requestAnimationFrame(actionQueueLoop);
 	}
 
 	async function	createfocusedbeam(){
-		console.log("create");
 
 		const children = await perso.getChildren();
 
@@ -237,7 +274,6 @@ async function Game(){
 	}
 
 	async function destroyfocusedbeam() {
-		console.log("destroy");
 
 		const children = await perso.getChildren();
 
@@ -280,13 +316,13 @@ async function Game(){
 			];
 
 			const origin = [
-			cameraTransform.position[0] + directionVector[0] * 4, // Multiplie par la distance souhaitée
+			cameraTransform.position[0] + directionVector[0], // Multiplie par la distance souhaitée
 			cameraTransform.position[1] - 0.5,
-			cameraTransform.position[2] + directionVector[2] * 4
+			cameraTransform.position[2] + directionVector[2]
 			];
 
 			const rayLength = 100;
-			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
 
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
@@ -299,11 +335,13 @@ async function Game(){
 			// Calcule de la taille du rayon
 			let FinalTransform = cameraTransform;
 			// Vérifie s'il y a des touches
-			if (touches && touches.length > 0 && touches[1] && touches[1].position) {
+			if (touches && touches.length > 0 && (lights.includes(touches[0].entity) || players.includes(touches[0].entity)))
+				touches.shift();
+			if (touches && touches.length > 0 && touches[0] && touches[0].position) {
 				let distance = Math.sqrt(
-					Math.pow(cameraTransform.position[0] - touches[1].position[0], 2) +
-					Math.pow(cameraTransform.position[1] - touches[1].position[1], 2) +
-					Math.pow(cameraTransform.position[2] - touches[1].position[2], 2)
+					Math.pow(cameraTransform.position[0] - touches[0].position[0], 2) +
+					Math.pow(cameraTransform.position[1] - touches[0].position[1], 2) +
+					Math.pow(cameraTransform.position[2] - touches[0].position[2], 2)
 				);
 				FinalTransform.scale = [1, 1, distance];
 			} else {
@@ -314,7 +352,6 @@ async function Game(){
 			children[2].setGlobalTransform(FinalTransform);
 		}
 	}
-	await isInLight();
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -323,6 +360,7 @@ async function Game(){
 |																							|
 ---------------------------------------------------------------------------------------------
 */
+
 	let isGrabbing = false;
 	let grabbedEntity;
 
@@ -335,13 +373,16 @@ async function Game(){
 	async function Grab(){
 		if (isGrabbing == true)
 		{
-			console.log("Detach");
-			grabbedEntity.attachComponent('rigid_body');
+			grabbedEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
+			//triggerEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
+			//triggerEntity.setComponent('physics_material', ({'isTrigger': false}));
 			grabbedEntity = null;
+			//triggerEntity = null;
 			isGrabbing = false;
 		}
 		else if (isGrabbing == false)
 		{
+
 			const cameraTransform = camera.getTransform();
 
 			// dirVect
@@ -370,17 +411,17 @@ async function Game(){
 			const rayLength = 1;
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
-
-			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-
-			if (touches.length > 0)
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
+			if (block != null)
 			{
-				grabbedEntity = touches[0].entity;
-				grabbedEntity.detachComponent('rigid_body');
-				isGrabbing = true;
+				if (await block.entity.getName() == "cubeEntity")
+				{
+					grabbedEntity = (await block.entity);
+					//triggerEntity = (await block);
+					grabbedEntity.detachComponent('rigid_body');
+					isGrabbing = true;
+				}
 			}
-
-			console.log(touches[0]);
 		}
 	}
 
@@ -405,12 +446,26 @@ async function Game(){
 			];
 
 			const pos = [
-			cameraTransform.position[0] + directionVector[0] * 2, // Multiplie par la distance souhaitée
-			cameraTransform.position[1] + directionVector[1] * 2,
-			cameraTransform.position[2] + directionVector[2] * 2
+				(cameraTransform.position[0] + directionVector[0] * 2) -0.5, // Multiplie par la distance souhaitée
+				cameraTransform.position[1] + directionVector[1] * 2 - 0.5,
+				(cameraTransform.position[2] + directionVector[2] * 2)- 0.5
 			];
 
 			grabbedEntity.setGlobalTransform({position : pos});
+	}
+
+/*
+---------------------------------------------------------------------------------------------
+|																							|
+|									Cinematic												|
+|																							|
+---------------------------------------------------------------------------------------------
+*/
+
+	async function PlayCinematic(){
+		//let transform = camera.getTransform();
+		//await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [-3.007635, 5.210598, 68.501045], camera.getTransform().orientation, 1, camera.getTransform().position, camera.getTransform().orientation);
+		//camera.setTransform(transform);
 	}
 
 /*
@@ -431,7 +486,6 @@ async function Game(){
 		movefocusedbeam();
 		if (isGrabbing)
 			moveGrabbed();
-		//setFPSCameraController(document.getElementById("display-canvas"));
 		window.requestAnimationFrame(loop);
 	}
 	window.requestAnimationFrame(loop);
