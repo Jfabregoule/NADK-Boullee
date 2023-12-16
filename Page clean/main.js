@@ -402,7 +402,7 @@ async function Game(){
 				-directionVector[2] / magnitude
 			];
 
-			(const pos = [
+			const pos = [
 			(cameraTransform.position[0] + directionVector[0] * 2) -0.5, // Multiplie par la distance souhaitée
 			(cameraTransform.position[1] + directionVector[1] * 2) -0.5,
 			(cameraTransform.position[2] + directionVector[2] * 2)- 0.5
