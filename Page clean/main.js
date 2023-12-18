@@ -316,6 +316,7 @@ async function Game(){
 		}
 
 		if (red && purple && light){
+			console.log("SUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUI")
 		}
 	}
 
