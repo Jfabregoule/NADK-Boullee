@@ -447,7 +447,6 @@ async function Game(){
 
 	async function InitGrabbable(){
 		let cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('cubeEntity');
-		console.log(cubes)
 		grabbable.push(...cubes);
 		cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('redCube');
 		grabbable.push(...cubes);
