@@ -205,6 +205,7 @@ async function Game(){
 			isShooting = false;
 			SDK3DVerse.engineAPI.onEnterTrigger((camera, battle_light) =>
 			{
+				console.log(camera.getName(), " entered trigger of ", battle_light.getName());
 				createfocusedbeam();
 			});
 			SDK3DVerse.engineAPI.onExitTrigger((camera, battle_light) =>
@@ -320,6 +321,8 @@ async function Game(){
 */
 	let isGrabbing = false;
 	let grabbedEntity;
+	let triggerEntity;
+	let detectedEntity
 
 	document.addEventListener('keyup',(event)=>{
 		if(event.key == 'f'){
@@ -368,14 +371,12 @@ async function Game(){
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
-			console.log(block);
 			if (block != null)
 			{
-				console.log(block);
 				if (await block.entity.getName() == "cubeEntity")
 				{
 					grabbedEntity = (await block.entity);
-					//triggerEntity = (await block);
+					detectedEntity = grabbedEntity;
 					grabbedEntity.detachComponent('rigid_body');
 					isGrabbing = true;
 				}
@@ -412,6 +413,9 @@ async function Game(){
 			grabbedEntity.setGlobalTransform({position : pos});
 			
 	}
+
+	triggerEntity = (await SDK3DVerse.engineAPI.findEntitiesByNames('detector'))[0];
+
 
 /*
 ---------------------------------------------------------------------------------------------
