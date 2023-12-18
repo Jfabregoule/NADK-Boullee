@@ -381,6 +381,86 @@ async function Game(){
 /*
 ---------------------------------------------------------------------------------------------
 |																							|
+|										Enemy												|
+|																							|
+---------------------------------------------------------------------------------------------
+*/
+
+	async function InitEnemy(enemyUUID){
+		const enemyTemplate = new SDK3DVerse.EntityTemplate();
+		enemyTemplate.attachComponent('mesh_ref', { value : enemyUUID });
+		enemyTemplate.attachComponent('material_ref', { value : "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484" });
+	
+		enemyTemplate.attachComponent('physics_material');
+	
+		const parentEntity = null;
+		const deleteOnClientDisconnection = true;
+	
+		const enemyEntity = await enemyTemplate.instantiateTransientEntity(
+			"enemy",
+			parentEntity,
+			deleteOnClientDisconnection
+		);
+		enemyEntity.setGlobalTransform({ position : [0, 1, 0] });
+	
+		let transform = enemyEntity.getGlobalTransform();
+		transform.scale = [0.5, 0.5, 0.5];
+		let direction = 0;
+		let speed = 0.05;
+	
+		async function moveEnemy(){
+		
+			let directionTable = {
+				0 : [speed, 0, 0],
+				1 : [0, 0, speed],
+				2 : [-speed, 0, 0],
+				3 : [0, 0, -speed]
+			}
+	
+			transform.position[0] += directionTable[direction][0];
+			transform.position[1] += directionTable[direction][1];
+			transform.position[2] += directionTable[direction][2];
+			enemyEntity.setGlobalTransform(transform);
+			
+			// dirVect
+			let directionVector = [
+				directionTable[direction][0] * 1 / speed, // X
+				directionTable[direction][1], 			  // Y
+				directionTable[direction][2] * 1 / speed  // Z
+			];
+	
+			const origin = [
+				transform.position[0],
+				transform.position[1],
+				transform.position[2]
+			];
+	
+			const rayLength = Math.random() + 1;
+			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
+	
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
+	
+			if (touches.length > 0 || delay == 1)
+			{
+				direction = (direction + 1) % 4;
+				delay = 1;
+			}
+		}
+		function boucle() {
+			moveEnemy();
+			setFPSCameraController(document.getElementById("display-canvas"));
+			window.requestAnimationFrame(boucle);
+		}
+		window.requestAnimationFrame(boucle);
+	}
+
+	await InitEnemy(phantomMeshUUID);
+
+
+/*
+---------------------------------------------------------------------------------------------
+|																							|
 |										Grab												|
 |																							|
 ---------------------------------------------------------------------------------------------
