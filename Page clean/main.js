@@ -194,41 +194,69 @@ async function Game(){
 ---------------------------------------------------------------------------------------------
 */
 
-	let hasSeenCinematic = false;
-	let isShooting;
-	const actionQueue = [];
+let hasSeenCinematic = false;
+let isShooting;
+const actionQueue = [];
 
-	const persos = await SDK3DVerse.engineAPI.findEntitiesByNames('Player');
-	const perso = persos[0];
+const persos = await SDK3DVerse.engineAPI.findEntitiesByNames('Player');
+const perso = persos[0];
 
-	let players = await SDK3DVerse.engineAPI.findEntitiesByNames('First Person Controller');
-	let player = players[0];
-	const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
+let players = await SDK3DVerse.engineAPI.findEntitiesByNames('First Person Controller');
+let player = players[0];
+const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
 
-	const lightTemplate = new SDK3DVerse.EntityTemplate();
-	lightTemplate.attachComponent("scene_ref", { value: '5cbfd358-45d9-4442-b4bf-dd1b4db5776f' });
-	lightTemplate.attachComponent('local_transform', { position : [0, 0, 0] });
+const lightTemplate = new SDK3DVerse.EntityTemplate();
+lightTemplate.attachComponent("scene_ref", { value: '5cbfd358-45d9-4442-b4bf-dd1b4db5776f' });
+lightTemplate.attachComponent('local_transform', { position : [0, 0, 0] });
 
-	const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
+//const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
+let lights = [];
 
-	isShooting = false;
+isShooting = false;
 
-	let tmp = await SDK3DVerse.engineAPI.findEntitiesByNames('Cinematic trigger');
-	let FirstCinematicTrigger = tmp[0];
+let tmp = await SDK3DVerse.engineAPI.findEntitiesByNames('Cinematic trigger');
+let FirstCinematicTrigger = tmp[0];
 
-	let cubeBox = await SDK3DVerse.engineAPI.findEntitiesByNames('Cube box');
+let cubeBox = await SDK3DVerse.engineAPI.findEntitiesByNames('Cube box');
 
-	let triggerBoxes = await SDK3DVerse.engineAPI.findEntitiesByNames('Battle_light');
-	let buttons = await SDK3DVerse.engineAPI.findEntitiesByNames('Button');
-	triggerBoxes.push(...tmp);
-	triggerBoxes.push(...cubeBox);
+let triggerBoxes = await SDK3DVerse.engineAPI.findEntitiesByNames('Battle_light');
+let buttons = [];
+triggerBoxes.push(...tmp);
+triggerBoxes.push(...cubeBox);
 
-	let isGrabbing = false;
-	let grabbedEntity;
-	let grabbable = [];
+let mirrors = [];
+let MirrorsShoot = [];
 
-	let enigmaEntities = [];
-	let enigmaDetectors = [];
+for (let i = 0; i < mirrors.length; i++)
+	MirrorsShoot[i] = false;
+
+let focusedBeams = [];
+
+let isGrabbing = false;
+let grabbedEntity;
+let grabbable = [];
+
+let tagged = [];
+
+async function GetTags()
+{
+	const componentFilter = { mandatoryComponents : ['tags']};
+	tagged = await SDK3DVerse.engineAPI.findEntitiesByComponents(componentFilter);
+	for (let i = 0; i < tagged.length; i++)
+	{
+		if (tagged[i].getComponent('tags').value[0] == 'mirror')
+		{
+			mirrors.push(tagged[i]);
+			MirrorsShoot.push(false);
+		}
+		else if (tagged[i].getComponent('tags').value[0] == 'button')
+			buttons.push(tagged[i]);
+		else if (tagged[i].getComponent('tags').value[0] == 'light')
+			lights.push(tagged[i]);
+	}
+}
+await GetTags();
+
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -276,6 +304,8 @@ async function Game(){
 ---------------------------------------------------------------------------------------------
 */
 	async function InitEnigma(){
+		let enigmaDetectors = [];
+		let enigmaEntities = [];
 		let detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('wallDetector'));
 		enigmaDetectors.push(...detector);
 		detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('redDetector'));
@@ -321,43 +351,67 @@ async function Game(){
 		if (red && purple && light){
 			console.log("BOUBOUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUULE MON BÉBÉ DÉFONCE MOIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII")
 		}
+
 	}
 
 	document.addEventListener('keyup',(event)=>{
-		if(event.key == 'f'){
+		if(event.key == 'h'){
 			ButtonEnigma();
 		}
 	})
 
 	async function ButtonEnigma(){
-		// Normalise le vecteur si nécessaire
-		const magnitude = Math.sqrt(
-			directionVector[0] ** 2 + directionVector[1] ** 2 + directionVector[2] ** 2
-		);
-		directionVector = [
-			-directionVector[0] / magnitude,
-			-directionVector[1] / magnitude,
-			-directionVector[2] / magnitude
-		];
+		if (codeTry == code){
+			console.log(code)
+			console.log(codeTry)
+			codeTry = [];
+			console.log("CODE BON");
+		}
+		if (codeTry != code && codeTry.length < 4){
+			const cameraTransform = camera.getTransform();
 
-		const origin = [
-		cameraTransform.position[0] + directionVector[0], // Multiplie par la distance souhaitée
-		cameraTransform.position[1] + directionVector[1],
-		cameraTransform.position[2] + directionVector[2]
-		];
+			// dirVect
+			let directionVector = [
+				SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[8],   // X
+				SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[9],   // Y
+				SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[10]   // Z
+			]; 	
+			// Normalise le vecteur si nécessaire
+			const magnitude = Math.sqrt(
+				directionVector[0] ** 2 + directionVector[1] ** 2 + directionVector[2] ** 2
+			);
+			directionVector = [
+				-directionVector[0] / magnitude,
+				-directionVector[1] / magnitude,
+				-directionVector[2] / magnitude
+			];
 
-		const rayLength = 1;
-		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-		// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
-		const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
+			const origin = [
+			cameraTransform.position[0] + directionVector[0], // Multiplie par la distance souhaitée
+			cameraTransform.position[1] + directionVector[1],
+			cameraTransform.position[2] + directionVector[2]
+			];
 
-		if (block != null )
-		{
-			if (block.entity.getComponent('Tags')){
-				//if (tag[0] == button)
-				//if (tag[1] == code[0] and trycode)
+			const rayLength = 1;
+			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
+
+			if (block != null )
+			{
+				console.log("jgrqkjfgerqkfbejzqkfnekzqgresgrikjgiruoehgruieqikjhgriqu")
+				if (block.entity.getComponent('Tags')){
+					if (block.entity.getComponent('tags').value[0] == 'button'){
+						codeTry.push(block.entity.getComponent('tags').value[1])
+					}
+				}
 			}
 		}
+		if (codeTry.length >= 4){
+			codeTry = [];
+			console.log("MAUVAIS CODE");
+		}
+		return false;
 	}
 
 /*
