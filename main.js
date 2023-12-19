@@ -236,6 +236,8 @@ async function Game(){
 	let grabbedEntity;
 	let grabbable = [];
 
+	let isBehavior = true;
+
 	let tagged = [];
 
 	async function GetTags()
