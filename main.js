@@ -311,9 +311,10 @@ async function Game(){
 	window.requestAnimationFrame(actionQueueLoop);
 	}
 
-	async function rotateBeam(mirror)
+	async function ResizeBeam(mirror)
 	{
-
+		let children = await mirror.getChildren();
+		console.log(beam);
 	}
 
 	async function shootMirror(mirror)
@@ -330,8 +331,14 @@ async function Game(){
 			lightParentEntity,
 			true
 		);
-		lightParentEntity.setGlobalTransform({scale : [1, 1, 5]})
-		lightParentEntity.setGlobalTransform({orientation : [0, 0, 0, 1]})
+		lightSceneEntity.setGlobalTransform({scale : [1, 1, 50]})
+		let orientation = lightSceneEntity.getGlobalTransform().orientation;
+
+		lightSceneEntity.setGlobalTransform({orientation : orientation});
+		let position = lightSceneEntity.getGlobalTransform().position;
+		position[1] += 0.5;
+		lightSceneEntity.setGlobalTransform({position : position});
+		ResizeBeam(mirror);
 		focusedBeams.push(lightSceneEntity);
 		}
 	}
@@ -437,9 +444,7 @@ async function Game(){
 			}
 			if (touches[0] && touches[0].entity && mirrors.includes(touches[0].entity))
 			{
-				console.log("TEST");
 				let id = mirrors.findIndex(element => element === touches[0].entity);
-				console.log(MirrorsShoot[id]);
 				if (MirrorsShoot[id] == false)
 					await shootMirror(touches[0].entity);
 				touches.shift();
@@ -606,10 +611,7 @@ async function Game(){
 		if (isGrabbing == true)
 		{
 			grabbedEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
-			//triggerEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
-			//triggerEntity.setComponent('physics_material', ({'isTrigger': false}));
 			grabbedEntity = null;
-			//triggerEntity = null;
 			isGrabbing = false;
 		}
 		else if (isGrabbing == false)
@@ -644,15 +646,12 @@ async function Game(){
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
+
 			if (block != null && grabbable.includes(block.entity))
 			{
-				if (await block.entity.getName() == "cubeEntity")
-				{
-					grabbedEntity = (await block.entity);
-					//triggerEntity = (await block);
-					grabbedEntity.detachComponent('rigid_body');
-					isGrabbing = true;
-				}
+				grabbedEntity = (await block.entity);
+				grabbedEntity.detachComponent('rigid_body');
+				isGrabbing = true;
 			}
 		}
 	}
