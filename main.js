@@ -209,7 +209,8 @@ async function Game(){
 	lightTemplate.attachComponent("scene_ref", { value: '5cbfd358-45d9-4442-b4bf-dd1b4db5776f' });
 	lightTemplate.attachComponent('local_transform', { position : [0, 0, 0] });
 
-	const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
+	//const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
+	let lights = [];
 
 	isShooting = false;
 
@@ -219,23 +220,43 @@ async function Game(){
 	let cubeBox = await SDK3DVerse.engineAPI.findEntitiesByNames('Cube box');
 
 	let triggerBoxes = await SDK3DVerse.engineAPI.findEntitiesByNames('Battle_light');
-	let buttons = await SDK3DVerse.engineAPI.findEntitiesByNames('Button');
+	let buttons = [];
 	triggerBoxes.push(...tmp);
 	triggerBoxes.push(...cubeBox);
 
-	let mirrors = await SDK3DVerse.engineAPI.findEntitiesByNames('mirror');
-	console.log(mirrors);
-
+	let mirrors = [];
 	let MirrorsShoot = [];
+
 	for (let i = 0; i < mirrors.length; i++)
 		MirrorsShoot[i] = false;
+
 	let focusedBeams = [];
 
 	let isGrabbing = false;
 	let grabbedEntity;
 	let grabbable = [];
 
-	let isBehavior = true;
+	let tagged = [];
+
+	async function GetTags()
+	{
+		const componentFilter = { mandatoryComponents : ['tags']};
+		tagged = await SDK3DVerse.engineAPI.findEntitiesByComponents(componentFilter);
+		for (let i = 0; i < tagged.length; i++)
+		{
+			if (tagged[i].getComponent('tags').value[0] == 'mirror')
+			{
+				mirrors.push(tagged[i]);
+				MirrorsShoot.push(false);
+			}
+			else if (tagged[i].getComponent('tags').value[0] == 'button')
+				buttons.push(tagged[i]);
+			else if (tagged[i].getComponent('tags').value[0] == 'light')
+				lights.push(tagged[i]);
+		}
+	}
+	await GetTags();
+
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -249,7 +270,7 @@ async function Game(){
 
 			SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) =>
 			{
-				if (entering == player && zone == lights[0])
+				if (entering == player && lights.includes(zone))
 					actionQueue.push(() => createfocusedbeam());
 				else if (entering == player && zone == FirstCinematicTrigger && !hasSeenCinematic)
 				{
@@ -264,7 +285,7 @@ async function Game(){
 				{
 					exiting.setGlobalTransform({position : [0, 0, 0]});
 				}
-				if (exiting == player && zone == lights[0])
+				if (exiting == player && lights.includes(zone))
 					actionQueue.push(() => destroyfocusedbeam());
 			});
 	}
@@ -290,43 +311,71 @@ async function Game(){
 	window.requestAnimationFrame(actionQueueLoop);
 	}
 
-	async function rotateBeam(mirror)
+	async function ResizeBeam(mirror)
 	{
+		let children = await mirror.getChildren();
+		let beam = children[1];
+		let mirrorTransform = mirror.getGlobalTransform();
 
-			const rayLength = 10;
-			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
+		// Vecteur initial pointant vers l'avant (par exemple, l'axe -Z)
+		const forwardVector = { x: 0, y: 0, z: -1 };
 
-			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
+		// Effectuer la rotation du vecteur en fonction du quaternion
+		const x = mirrorTransform.orientation[0],
+			y = mirrorTransform.orientation[1],
+			z = mirrorTransform.orientation[2],
+			w = mirrorTransform.orientation[3];
 
-			// Vérifiez si la position Y de l'entité a changé
-			const epsilon = 0.0001; // Tolerance
-			if (Math.abs(children[2].getGlobalTransform().position[1] - cameraTransform.position[1]) > epsilon) {
-			cameraTransform.position[1] -= 1;
-			}
-			// Calcule de la taille du rayon
-			let FinalTransform = cameraTransform;
-			// Vérifie s'il y a des touches
-			while(touches && touches.length > 0 && (triggerBoxes.includes(touches[0].entity) || players.includes(touches[0].entity)))
-				touches.shift();
+		// Appliquer la rotation du quaternion à ce vecteur
+		const x2 = x + x;
+		const y2 = y + y;
+		const z2 = z + z;
+		const xx = x * x2;
+		const xy = x * y2;
+		const xz = x * z2;
+		const yy = y * y2;
+		const yz = y * z2;
+		const zz = z * z2;
+		const wx = w * x2;
+		const wy = w * y2;
+		const wz = w * z2;
 
-			if (touches && touches.length > 0 && touches[0] && touches[0].position) {
-				let distance = Math.sqrt(
-					Math.pow(cameraTransform.position[0] - touches[0].position[0], 2) +
-					Math.pow(cameraTransform.position[1] - touches[0].position[1], 2) +
-					Math.pow(cameraTransform.position[2] - touches[0].position[2], 2)
-				);
-				FinalTransform.scale = [1, 1, distance];
-			} else {
-				// touches est undefined ou touches[0].position est undefined
-				FinalTransform.scale = [1, 1, 100]; // ou une autre valeur par défaut
-			}
-				// Mettez à jour la transformée de l'entité
-			children[2].setGlobalTransform(FinalTransform);
+		const rotatedDirection = {
+			x: forwardVector.x * (1.0 - (yy + zz)) + forwardVector.y * (xy - wz) + forwardVector.z * (xz + wy),
+			y: forwardVector.x * (xy + wz) + forwardVector.y * (1.0 - (xx + zz)) + forwardVector.z * (yz - wx),
+			z: forwardVector.x * (xz - wy) + forwardVector.y * (yz + wx) + forwardVector.z * (1.0 - (xx + yy))
+		};
+
+		// Normaliser le vecteur résultant
+		const magnitude = Math.sqrt(rotatedDirection.x * rotatedDirection.x + rotatedDirection.y * rotatedDirection.y + rotatedDirection.z * rotatedDirection.z);
+		const directionVector = {
+			x: rotatedDirection.x / magnitude,
+			y: rotatedDirection.y / magnitude,
+			z: rotatedDirection.z / magnitude
+		};
+
+		const origin = [
+			mirrorTransform.position[0] + directionVector.x, // Multiplie par la distance souhaitée
+			mirrorTransform.position[1] + 0.5,
+			mirrorTransform.position[2] + directionVector.z
+		];
+
+		const rayLength = 100;
+		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+
+		// Effectuer le raycast
+		const { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, [directionVector.x, directionVector.y, directionVector.z], rayLength, filterFlags);
+		for (let i = 0; i < touches.length; i++)
+		{
+			if (mirrors.includes(touches[i].entity))
+				shootMirror(touches[i].entity);
+		}
+		console.log(touches);
 	}
 
 	async function shootMirror(mirror)
 	{
+		console.log("Shoot");
 		let index = mirrors.findIndex(element => element === mirror);
 		if (index != -1 && MirrorsShoot[index] == false)
 		{
@@ -338,9 +387,14 @@ async function Game(){
 			lightParentEntity,
 			true
 		);
-		lightParentEntity.setGlobalTransform({scale : [1, 1, 5]})
-		lightParentEntity.setGlobalTransform({orientation : [0, 0, 0, 1]})
-		console.log(lightParentEntity.getGlobalTransform().orientation);
+		lightSceneEntity.setGlobalTransform({scale : [1, 1, 50]})
+		let orientation = lightSceneEntity.getGlobalTransform().orientation;
+
+		lightSceneEntity.setGlobalTransform({orientation : orientation});
+		let position = lightSceneEntity.getGlobalTransform().position;
+		position[1] += 0.5;
+		lightSceneEntity.setGlobalTransform({position : position});
+		ResizeBeam(mirror);
 		focusedBeams.push(lightSceneEntity);
 		}
 	}
@@ -444,10 +498,9 @@ async function Game(){
 			{
 				touches.shift();
 			}
-			if (touches[0] && touches[0].entity && touches[0].entity.getComponent('debug_name').value == 'mirror')
+			if (touches[0] && touches[0].entity && mirrors.includes(touches[0].entity))
 			{
-				let id = await mirrors.findIndex(element => element === touches[0].entity);
-				console.log(MirrorsShoot[id]);
+				let id = mirrors.findIndex(element => element === touches[0].entity);
 				if (MirrorsShoot[id] == false)
 					await shootMirror(touches[0].entity);
 				touches.shift();
@@ -480,12 +533,12 @@ async function Game(){
 		const enemyTemplate = new SDK3DVerse.EntityTemplate();
 		enemyTemplate.attachComponent('mesh_ref', { value : enemyUUID });
 		enemyTemplate.attachComponent('material_ref', { value : "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484" });
-	
+
 		enemyTemplate.attachComponent('physics_material');
-	
+
 		const parentEntity = null;
 		const deleteOnClientDisconnection = true;
-	
+
 		const enemyEntity = await enemyTemplate.instantiateTransientEntity(
 			"enemy",
 			parentEntity,
@@ -697,10 +750,7 @@ async function Game(){
 		if (isGrabbing == true)
 		{
 			grabbedEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
-			//triggerEntity.attachComponent('rigid_body', ({'centerOfMass': [0.5,0.5,0.5]}));
-			//triggerEntity.setComponent('physics_material', ({'isTrigger': false}));
 			grabbedEntity = null;
-			//triggerEntity = null;
 			isGrabbing = false;
 		}
 		else if (isGrabbing == false)
@@ -735,15 +785,12 @@ async function Game(){
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
+
 			if (block != null && grabbable.includes(block.entity))
 			{
-				if (await block.entity.getName() == "cubeEntity")
-				{
-					grabbedEntity = (await block.entity);
-					//triggerEntity = (await block);
-					grabbedEntity.detachComponent('rigid_body');
-					isGrabbing = true;
-				}
+				grabbedEntity = (await block.entity);
+				grabbedEntity.detachComponent('rigid_body');
+				isGrabbing = true;
 			}
 		}
 	}
@@ -788,9 +835,6 @@ async function Game(){
 	let rad = 0;
 	function degToRad(deg){ return deg * Math.PI/180}
 
-	const mirrorEntity = (await SDK3DVerse.engineAPI.findEntitiesByNames("mirror"))[0];
-	let transform = mirrorEntity.getGlobalTransform();;
-
 	document.addEventListener('keyup',(event)=>{
 		if(event.key == 'r'){
 			rotateMirror();
@@ -829,10 +873,14 @@ async function Game(){
 		const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
 		if (block != null){
 			if (block.entity.getName() == 'mirror'){
+				let transform = block.entity.getGlobalTransform();
 				angle += 45;
 				rad  = degToRad(angle);
 				transform.orientation = [0,Math.sin((rad/2)),0,Math.cos((rad/2))];
-				mirrorEntity.setGlobalTransform(transform);
+				block.entity.setGlobalTransform(transform);
+				let index = mirrors.findIndex(element => element === block.entity);
+				if (MirrorsShoot[index] == true)
+					ResizeBeam(block.entity);
 			}
 		}
 	}
