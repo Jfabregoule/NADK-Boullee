@@ -304,6 +304,7 @@ async function Game(){
 	async function Enigma(entity, detector){
 		if (entity.getName() == 'cubeEntity' && detector.getName() == 'wallDetector'){
 			wall.setVisibility(false);	
+			wall.detachComponent('physics_material');
 		}
 		if (entity.getName() == 'redCube' && detector.getName() == 'redDetector'){
 			red = true;
