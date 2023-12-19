@@ -563,7 +563,7 @@ async function Game(){
 			3 : [-1, 0, 0]
 		}
 		/*
-		
+		 
 		async function manageHeight(enemyPos, height){
 			let offset = 0.02;
 
@@ -624,7 +624,7 @@ async function Game(){
 			// Raycast
 			let origin = enemyTransform.position;
 	
-			const rayLength = Math.random() + 2;
+			const rayLength = 3;
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 	
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
@@ -665,7 +665,6 @@ async function Game(){
 		function boucle() {
 			if (isBehavior) {
 				wanderEnemy();
-				console.log("1");
 			} else {
 				followEnemy();
 				console.log("2");
