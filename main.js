@@ -795,7 +795,9 @@ async function Game(){
 				rad  = degToRad(angle);
 				transform.orientation = [0,Math.sin((rad/2)),0,Math.cos((rad/2))];
 				block.entity.setGlobalTransform(transform);
-				ResizeBeam(block.entity);
+				let index = mirrors.findIndex(element => element === block.entity);
+				if (MirrorsShoot[index] == true)
+					ResizeBeam(block.entity);
 			}
 		}
 	}
