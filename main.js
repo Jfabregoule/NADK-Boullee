@@ -314,7 +314,63 @@ async function Game(){
 	async function ResizeBeam(mirror)
 	{
 		let children = await mirror.getChildren();
-		console.log(beam);
+		let beam = children[1];
+		let mirrorTransform = mirror.getGlobalTransform();
+
+		// Vecteur initial pointant vers l'avant (par exemple, l'axe -Z)
+		const forwardVector = { x: 0, y: 0, z: -1 };
+
+		// Effectuer la rotation du vecteur en fonction du quaternion
+		const x = mirrorTransform.orientation[0],
+			y = mirrorTransform.orientation[1],
+			z = mirrorTransform.orientation[2],
+			w = mirrorTransform.orientation[3];
+
+		// Appliquer la rotation du quaternion à ce vecteur
+		const x2 = x + x;
+		const y2 = y + y;
+		const z2 = z + z;
+		const xx = x * x2;
+		const xy = x * y2;
+		const xz = x * z2;
+		const yy = y * y2;
+		const yz = y * z2;
+		const zz = z * z2;
+		const wx = w * x2;
+		const wy = w * y2;
+		const wz = w * z2;
+
+		const rotatedDirection = {
+			x: forwardVector.x * (1.0 - (yy + zz)) + forwardVector.y * (xy - wz) + forwardVector.z * (xz + wy),
+			y: forwardVector.x * (xy + wz) + forwardVector.y * (1.0 - (xx + zz)) + forwardVector.z * (yz - wx),
+			z: forwardVector.x * (xz - wy) + forwardVector.y * (yz + wx) + forwardVector.z * (1.0 - (xx + yy))
+		};
+
+		// Normaliser le vecteur résultant
+		const magnitude = Math.sqrt(rotatedDirection.x * rotatedDirection.x + rotatedDirection.y * rotatedDirection.y + rotatedDirection.z * rotatedDirection.z);
+		const directionVector = {
+			x: rotatedDirection.x / magnitude,
+			y: rotatedDirection.y / magnitude,
+			z: rotatedDirection.z / magnitude
+		};
+
+		const origin = [
+			mirrorTransform.position[0] + directionVector.x, // Multiplie par la distance souhaitée
+			mirrorTransform.position[1] + 0.5,
+			mirrorTransform.position[2] + directionVector.z
+		];
+
+		const rayLength = 100;
+		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+
+		// Effectuer le raycast
+		const { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, [directionVector.x, directionVector.y, directionVector.z], rayLength, filterFlags);
+		for (let i = 0; i < touches.length; i++)
+		{
+			if (mirrors.includes(touches[i].entity))
+				shootMirror(touches[i].entity);
+		}
+		console.log(touches);
 	}
 
 	async function shootMirror(mirror)
@@ -739,6 +795,7 @@ async function Game(){
 				rad  = degToRad(angle);
 				transform.orientation = [0,Math.sin((rad/2)),0,Math.cos((rad/2))];
 				block.entity.setGlobalTransform(transform);
+				ResizeBeam(block.entity);
 			}
 		}
 	}
