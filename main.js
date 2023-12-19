@@ -235,6 +235,7 @@ async function Game(){
 	let grabbedEntity;
 	let grabbable = [];
 
+	let isBehavior = true;
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -492,52 +493,128 @@ async function Game(){
 		);
 		enemyEntity.setGlobalTransform({ position : [0, 1, 0] });
 	
-		let transform = enemyEntity.getGlobalTransform();
-		transform.scale = [0.5, 0.5, 0.5];
+		let distance = 3 / 60;
+
+		let enemyTransform = enemyEntity.getGlobalTransform();
+		enemyTransform.scale = [0.7, 0.7, 0.7];
+
 		let direction = 0;
-		let speed = 0.05;
-	
-		async function moveEnemy(){
+		let height = 1;
 		
-			let directionTable = {
-				0 : [speed, 0, 0],
-				1 : [0, 0, speed],
-				2 : [-speed, 0, 0],
-				3 : [0, 0, -speed]
-			}
-	
-			transform.position[0] += directionTable[direction][0];
-			transform.position[1] += directionTable[direction][1];
-			transform.position[2] += directionTable[direction][2];
-			enemyEntity.setGlobalTransform(transform);
+		let directionTable = {
+			0 : [0, 0, 1],
+			1 : [1, 0, 0],
+			2 : [0, 0, -1],
+			3 : [-1, 0, 0]
+		}
+		/*
+		
+		async function manageHeight(enemyPos, height){
+			let offset = 0.02;
+
+			let origin = enemyPos;
+			let directionVector = [0, -1, 0];
+			let rayLength = height;
+			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			
-			// dirVect
-			let directionVector = [
-				directionTable[direction][0] * 1 / speed, // X
-				directionTable[direction][1], 			  // Y
-				directionTable[direction][2] * 1 / speed  // Z
-			];
+			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
+			if (touches.length > 0)
+			{
+				while (touches.length > 0) {
+					origin[1] += offset;
+				}
+			}
+			else
+			{
+				while (touches.length <= 0) {
+					origin[1] -= offset;
+				}
+			}
+			let heightTransform = enemyEntity.getGlobalTransform();
+
+		}
+		*/
+
+		async function wanderEnemy(){
+
+			// X and Z Position Managment
+			let enemyPos = enemyTransform.position;
+			
+			let directionVector = directionTable[direction]
+			
+			// Orientation Managment
+			let angle = Math.atan2(directionVector[0], directionVector[2]);
+			let a = 0,
+				b = Math.sin(angle / 2),
+				c = 0,
+				d = Math.cos(angle / 2);
+			let quaternion = [a, b, c, d];
+			enemyTransform.orientation = quaternion;
+			
+			/*
+			// Height Managment 
+			let enemyHeight = manageHeight(enemyPos, height);
+			*/
+
+			// Setting New Enemy Position
+			enemyPos = [
+				enemyPos[0] + directionVector[0] * distance, // X
+				1,											 // Y
+				enemyPos[2] + directionVector[2] * distance  // Z
+			]
+
+			enemyTransform.position = enemyPos;
+			enemyEntity.setGlobalTransform(enemyTransform);
+
+			// Raycast
+			let origin = enemyTransform.position;
 	
-			const origin = [
-				transform.position[0],
-				transform.position[1],
-				transform.position[2]
-			];
-	
-			const rayLength = Math.random() + 1;
+			const rayLength = Math.random() + 2;
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
 	
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-	
-			if (touches.length > 0 || delay == 1)
+			if (touches.length > 0)
 			{
-				direction = (direction + 1) % 4;
-				delay = 1;
+				const randomDirection = Math.floor(Math.random() * 3) + 1;
+				direction = (direction + randomDirection) % 4;
 			}
 		}
+		async function followEnemy(){
+
+			let cameraTransform = camera.getTransform();
+			let playerPos = cameraTransform.position;
+			let enemyPos = enemyTransform.position;
+
+			let directionVector = [
+				playerPos[0] - enemyPos[0], // X
+				playerPos[1] - enemyPos[1], // Y
+				playerPos[2] - enemyPos[2]  // Z
+			];
+
+			let magnitude = Math.sqrt(directionVector[0]*directionVector[0] + directionVector[1]*directionVector[1] + directionVector[2]*directionVector[2])
+			
+			directionVector = [
+				directionVector[0] / magnitude,
+				directionVector[1] / magnitude,
+				directionVector[2] / magnitude
+			]
+
+			let distanceRatio = directionVector[0] + directionVector[1] + directionVector[2]
+
+			enemyTransform.position = [
+				enemyPos[0] + directionVector[0] / distanceRatio * distance,
+				enemyPos[1] + directionVector[1] / distanceRatio * distance,
+				enemyPos[2] + directionVector[2] / distanceRatio * distance
+			]
+		}
 		function boucle() {
-			moveEnemy();
+			if (isBehavior) {
+				wanderEnemy();
+				console.log("1");
+			} else {
+				followEnemy();
+				console.log("2");
+			}
 			setFPSCameraController(document.getElementById("display-canvas"));
 			window.requestAnimationFrame(boucle);
 		}
@@ -545,6 +622,12 @@ async function Game(){
 	}
 
 	await InitEnemy(phantomMeshUUID);
+	function changeBehavior(event) {
+		if (event.key === 'p') { // Change behavior on pressing 'p' key
+			isBehavior = !isBehavior; // Toggle behavior
+		}
+	}
+	document.addEventListener('keypress', changeBehavior);
 
 
 /*
