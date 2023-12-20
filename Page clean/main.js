@@ -327,11 +327,13 @@ await GetTags();
 	InitEnigma()
 
 	const wall = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall'))[0];
+	const codeInteract = (await SDK3DVerse.engineAPI.findEntitiesByNames('codeInteract'))[0]
 	let red = false;
 	let purple = false;
 	let light = false;
-	let code = ["1","2","3"];
+	let code = ['1','2','3'];
 	let codeTry = []
+	let lastBtn  = null
 
 	async function Enigma(entity, detector){
 		if (entity.getName() == 'cubeEntity' && detector.getName() == 'wallDetector'){
@@ -355,19 +357,13 @@ await GetTags();
 	}
 
 	document.addEventListener('keyup',(event)=>{
-		if(event.key == 'h'){
+		if(event.key == 'f'){
 			ButtonEnigma();
 		}
 	})
 
 	async function ButtonEnigma(){
-		if (codeTry == code){
-			console.log(code)
-			console.log(codeTry)
-			codeTry = [];
-			console.log("CODE BON");
-		}
-		if (codeTry != code && codeTry.length < 4){
+		if (JSON.stringify(code) != JSON.stringify(codeTry)){
 			const cameraTransform = camera.getTransform();
 
 			// dirVect
@@ -396,20 +392,30 @@ await GetTags();
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
-
 			if (block != null )
 			{
-				console.log("jgrqkjfgerqkfbejzqkfnekzqgresgrikjgiruoehgruieqikjhgriqu")
-				if (block.entity.getComponent('Tags')){
+				if (block.entity.getComponent('tags')){
 					if (block.entity.getComponent('tags').value[0] == 'button'){
+						if (lastBtn != null){
+							let pos = lastBtn.getGlobalTransform().position;
+							lastBtn.setGlobalTransform({position: [pos[0] + 0.05, pos[1], pos[2]]});
+							lastBtn = null;
+						}
 						codeTry.push(block.entity.getComponent('tags').value[1])
+						let pos = block.entity.getGlobalTransform().position;
+						block.entity.setGlobalTransform({position : [pos[0] - 0.05, pos[1], pos[2]]});
+						lastBtn = block.entity;
 					}
 				}
 			}
 		}
-		if (codeTry.length >= 4){
+		if (JSON.stringify(code) == JSON.stringify(codeTry)){
 			codeTry = [];
-			console.log("MAUVAIS CODE");
+			codeInteract.setComponent('material_ref',{value : "cf7f45ff-014b-4c2c-90fa-1deb01a2a4bb"})
+		}
+		if (codeTry.length == 3 && JSON.stringify(code) != JSON.stringify(codeTry)){
+			codeTry = [];
+			codeInteract.setComponent('material_ref',{value : "5629a0e5-e272-4be1-82e1-c8d6cef9ae76"})
 		}
 		return false;
 	}
