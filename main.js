@@ -219,7 +219,7 @@ async function Game(){
 
 	let cubeBox = await SDK3DVerse.engineAPI.findEntitiesByNames('Cube box');
 
-	let triggerBoxes = await SDK3DVerse.engineAPI.findEntitiesByNames('Battle_light');
+	let triggerBoxes = [];
 	let buttons = [];
 	triggerBoxes.push(...tmp);
 	triggerBoxes.push(...cubeBox);
@@ -266,9 +266,13 @@ async function Game(){
 			else if (tagged[i].getComponent('tags').value[0] == 'button')
 				buttons.push(tagged[i]);
 			else if (tagged[i].getComponent('tags').value[0] == 'light')
+			{
 				lights.push(tagged[i]);
+				triggerBoxes.push(tagged[i]);
+			}
 		}
 	}
+	console.log(lights);
 	await GetTags();
 
 
@@ -285,7 +289,21 @@ async function Game(){
 			SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) =>
 			{
 				if (entering == player && lights.includes(zone))
+				{
 					actionQueue.push(() => createfocusedbeam());
+					console.log(zone.getComponent('tags').value[1]);
+					if (zone.getComponent('tags').value[1] == "elevate")
+					{
+						let Playertransform = player.getGlobalTransform();
+						let lightTransform = zone.getGlobalTransform();
+						console.log(Playertransform.position);
+						Playertransform.position[0] = lightTransform.position[0];
+						Playertransform.position[1] = camera.getTransform().position[1] - 2.5;
+						Playertransform.position[2] = lightTransform.position[2];
+						player.setGlobalTransform(Playertransform);
+					}
+				}
+
 				else if (entering == player && zone == FirstCinematicTrigger && !hasSeenCinematic)
 				{
 					console.log("Cinematic");
@@ -338,9 +356,9 @@ InitEnigma()
 
 async function Enigma(entity, detector){
 	if (enigmaEntities.includes(entity) && enigmaDetectors.includes(detector)){
-		
+
 		if (entity.getName() == 'cubeEntity' && detector.getName() == 'wallDetector'){
-			wall.setVisibility(false);	
+			wall.setVisibility(false);
 			wall.detachComponent('physics_material');
 		}
 		if (entity.getName() == 'redCube' && detector.getName() == 'redDetector'){
@@ -354,7 +372,7 @@ async function Enigma(entity, detector){
 		}
 
 		if (red && purple && light){
-			wall2.setVisibility(false);	
+			wall2.setVisibility(false);
 			wall2.detachComponent('physics_material');
 		}
 	}
@@ -375,7 +393,7 @@ async function ButtonEnigma(){
 			SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[8],   // X
 			SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[9],   // Y
 			SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[10]   // Z
-		]; 	
+		];
 		// Normalise le vecteur si nécessaire
 		const magnitude = Math.sqrt(
 			directionVector[0] ** 2 + directionVector[1] ** 2 + directionVector[2] ** 2
@@ -416,6 +434,10 @@ async function ButtonEnigma(){
 	if (JSON.stringify(code) == JSON.stringify(codeTry)){
 		codeTry = [];
 		codeInteract.setComponent('material_ref',{value : "cf7f45ff-014b-4c2c-90fa-1deb01a2a4bb"})
+	}
+	else if (codeTry.length != 3)
+	{
+		codeInteract.setComponent('material_ref',{value : "728815d9-9c78-4c3f-9462-c7ec0b5cbccd"})
 	}
 	if (codeTry.length == 3 && JSON.stringify(code) != JSON.stringify(codeTry)){
 		codeTry = [];
@@ -494,7 +516,7 @@ async function ButtonEnigma(){
 		];
 
 		const rayLength = 100;
-		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.static_body || SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 
 		// Effectuer le raycast
 		const { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, [directionVector.x, directionVector.y, directionVector.z], rayLength, filterFlags);
@@ -503,7 +525,7 @@ async function ButtonEnigma(){
 			if (mirrors.includes(touches[i].entity))
 				shootMirror(touches[i].entity);
 		}
-		console.log(touches);
+		console.log(block);
 	}
 
 	async function shootMirror(mirror)
@@ -678,7 +700,7 @@ async function ButtonEnigma(){
 			deleteOnClientDisconnection
 		);
 		enemyEntity.setGlobalTransform({ position : [0, 1, 0] });
-	
+
 		let distance = 3 / 60;
 
 		let enemyTransform = enemyEntity.getGlobalTransform();
@@ -686,7 +708,7 @@ async function ButtonEnigma(){
 
 		let direction = 0;
 		let height = 1;
-		
+
 		let directionTable = {
 			0 : [0, 0, 1],
 			1 : [1, 0, 0],
@@ -694,7 +716,7 @@ async function ButtonEnigma(){
 			3 : [-1, 0, 0]
 		}
 		/*
-		 
+
 		async function manageHeight(enemyPos, height){
 			let offset = 0.02;
 
@@ -702,7 +724,7 @@ async function ButtonEnigma(){
 			let directionVector = [0, -1, 0];
 			let rayLength = height;
 			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-			
+
 			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
 			if (touches.length > 0)
 			{
@@ -725,9 +747,9 @@ async function ButtonEnigma(){
 
 			// X and Z Position Managment
 			let enemyPos = enemyTransform.position;
-			
+
 			let directionVector = directionTable[direction]
-			
+
 			// Orientation Managment
 			let angle = Math.atan2(directionVector[0], directionVector[2]);
 			let a = 0,
@@ -736,9 +758,9 @@ async function ButtonEnigma(){
 				d = Math.cos(angle / 2);
 			let quaternion = [a, b, c, d];
 			enemyTransform.orientation = quaternion;
-			
+
 			/*
-			// Height Managment 
+			// Height Managment
 			let enemyHeight = manageHeight(enemyPos, height);
 			*/
 
@@ -754,10 +776,10 @@ async function ButtonEnigma(){
 
 			// Raycast
 			let origin = enemyTransform.position;
-	
+
 			const rayLength = 3;
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-	
+
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
 			if (touches.length > 0)
 			{
@@ -778,7 +800,7 @@ async function ButtonEnigma(){
 			];
 
 			let magnitude = Math.sqrt(directionVector[0]*directionVector[0] + directionVector[1]*directionVector[1] + directionVector[2]*directionVector[2])
-			
+
 			directionVector = [
 				directionVector[0] / magnitude,
 				directionVector[1] / magnitude,
