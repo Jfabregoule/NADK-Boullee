@@ -240,18 +240,6 @@ async function Game(){
 
 	let tagged = [];
 
-	let enigmaDetectors;
-	let enigmaEntities;
-	const wall = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall'))[0];
-	const wall2 = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall2'))[0];
-	const codeInteract = (await SDK3DVerse.engineAPI.findEntitiesByNames('codeInteract'))[0]
-	let red = false;
-	let purple = false;
-	let light = false;
-	let code = ['1','2','3'];
-	let codeTry = []
-	let lastBtn  = null
-
 	async function GetTags()
 	{
 		const componentFilter = { mandatoryComponents : ['tags']};
@@ -292,7 +280,6 @@ async function Game(){
 					PlayCinematic();
 					hasSeenCinematic = true;
 				}
-				Enigma(entering,zone);
 			});
 			SDK3DVerse.engineAPI.onExitTrigger((exiting, zone) =>
 			{
@@ -305,124 +292,6 @@ async function Game(){
 			});
 	}
 	await checkColls();
-
-	/*
----------------------------------------------------------------------------------------------
-|																							|
-|										Enigma												|
-|																							|
----------------------------------------------------------------------------------------------
-*/
-async function InitEnigma(){
-	enigmaDetectors = [];
-	enigmaEntities = [];
-	let detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('wallDetector'));
-	enigmaDetectors.push(...detector);
-	detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('redDetector'));
-	enigmaDetectors.push(...detector);
-	detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('purpleDetector'));
-	enigmaDetectors.push(...detector);
-	detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('lightDetector'));
-	enigmaDetectors.push(...detector);
-
-	let item = (await SDK3DVerse.engineAPI.findEntitiesByNames('cubeEntity'));
-	enigmaEntities.push(...item);
-	item = (await SDK3DVerse.engineAPI.findEntitiesByNames('redCube'));
-	enigmaEntities.push(...item);
-	item = (await SDK3DVerse.engineAPI.findEntitiesByNames('purpleCube'));
-	enigmaEntities.push(...item);
-	item = (await SDK3DVerse.engineAPI.findEntitiesByNames('lightCube'));
-	enigmaEntities.push(...item);
-}
-InitEnigma()
-
-async function Enigma(entity, detector){
-	if (enigmaEntities.includes(entity) && enigmaDetectors.includes(detector)){
-		
-		if (entity.getName() == 'cubeEntity' && detector.getName() == 'wallDetector'){
-			wall.setVisibility(false);	
-			wall.detachComponent('physics_material');
-		}
-		if (entity.getName() == 'redCube' && detector.getName() == 'redDetector'){
-			red = true;
-		}
-		if (entity.getName() == 'purpleCube' && detector.getName() == 'purpleDetector'){
-			purple = true;
-		}
-		if (entity.getName() == 'lightCube' && detector.getName() == 'lightDetector'){
-			light = true;
-		}
-
-		if (red && purple && light){
-			wall2.setVisibility(false);	
-			wall2.detachComponent('physics_material');
-		}
-	}
-}
-
-document.addEventListener('keyup',(event)=>{
-	if(event.key == 'f'){
-		ButtonEnigma();
-	}
-})
-
-async function ButtonEnigma(){
-	if (JSON.stringify(code) != JSON.stringify(codeTry)){
-		const cameraTransform = camera.getTransform();
-
-		// dirVect
-		let directionVector = [
-			SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[8],   // X
-			SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[9],   // Y
-			SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[10]   // Z
-		]; 	
-		// Normalise le vecteur si nécessaire
-		const magnitude = Math.sqrt(
-			directionVector[0] ** 2 + directionVector[1] ** 2 + directionVector[2] ** 2
-		);
-		directionVector = [
-			-directionVector[0] / magnitude,
-			-directionVector[1] / magnitude,
-			-directionVector[2] / magnitude
-		];
-
-		const origin = [
-		cameraTransform.position[0] + directionVector[0], // Multiplie par la distance souhaitée
-		cameraTransform.position[1] + directionVector[1],
-		cameraTransform.position[2] + directionVector[2]
-		];
-
-		const rayLength = 1;
-		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-		// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
-		const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
-		if (block != null )
-		{
-			if (block.entity.getComponent('tags')){
-				if (block.entity.getComponent('tags').value[0] == 'button'){
-					if (lastBtn != null){
-						let pos = lastBtn.getGlobalTransform().position;
-						lastBtn.setGlobalTransform({position: [pos[0] - 0.05, pos[1], pos[2]]});
-						lastBtn = null;
-					}
-					codeTry.push(block.entity.getComponent('tags').value[1])
-					let pos = block.entity.getGlobalTransform().position;
-					block.entity.setGlobalTransform({position : [pos[0] + 0.05, pos[1], pos[2]]});
-					lastBtn = block.entity;
-				}
-			}
-		}
-	}
-	if (JSON.stringify(code) == JSON.stringify(codeTry)){
-		codeTry = [];
-		codeInteract.setComponent('material_ref',{value : "cf7f45ff-014b-4c2c-90fa-1deb01a2a4bb"})
-	}
-	if (codeTry.length == 3 && JSON.stringify(code) != JSON.stringify(codeTry)){
-		codeTry = [];
-		codeInteract.setComponent('material_ref',{value : "5629a0e5-e272-4be1-82e1-c8d6cef9ae76"})
-	}
-	return false;
-}
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -666,6 +535,8 @@ async function ButtonEnigma(){
 
 		// Construction and Initialization of the enemy entity
 		constructor(initialPos, enemyUUID, materialRefValue, maxHP, speed, height) {
+			this.detect = true;
+			this.position = initialPos;
 			this.initialPos = initialPos;
 			this.enemyUUID = enemyUUID;
 			this.materialRefValue = materialRefValue;
@@ -677,8 +548,14 @@ async function ButtonEnigma(){
 			this.direction = 0;
 			this.directionVector = [0, 0, 1];
 		}
+
+		// Deletes enemy
+		destroy() {
+			delete this;
+		}
 	
-		async initialize() {
+		// Initializes an enemy
+		async initializeEnemy() {
 			const enemyTemplate = new SDK3DVerse.EntityTemplate();
 	
 			enemyTemplate.attachComponent('mesh_ref', { value: this.enemyUUID });
@@ -694,11 +571,68 @@ async function ButtonEnigma(){
 				deleteOnClientDisconnection
 			);
 	
-			let enemyTransform = this.enemyEntity.getGlobalTransform();
+			let enemyTransform = await this.enemyEntity.getGlobalTransform();
 			enemyTransform.position = this.initialPos;
-			enemyTransform.scale = [2, 2, 2];
+			enemyTransform.scale = [0.7, 0.7, 0.7];
 			this.enemyEntity.setGlobalTransform(enemyTransform);
 		}
+		
+		// Sets the enemy position
+		setEnemyPos(x, y, z) {
+			this.position = [x, y, z];
+			this.enemyEntity.setGlobalTransform({ position : this.position })
+		}
+
+		// Deals damage to enemy and deletes him if his hp gets below or equal to 0
+		takeDamage(amount) {
+			this.HP -= amount
+			if (this.HP <= 0) {
+				this.destroy();
+			}
+		}
+		
+		// Sets the enemy orientation
+		orientEnemy() {
+			
+			let angle = Math.atan2(this.directionVector[0], this.directionVector[2]);
+			let quaternion = [0, Math.sin(angle / 2), 0, Math.cos(angle/2)]
+			
+			this.enemyEntity.setGlobalTransform({ orientation : quaternion })
+		}
+		
+		// Adjusts the height of the enemy
+		async adjustHeight() {
+			let origin = this.position;
+			let directionVector = [0, -1, 0];
+			let rayLength = 15;
+			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+			
+			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
+			if (touches.length > 0)
+			{
+				let hitPoint = touches[0].position[1];
+				return hitPoint + this.height;
+			}
+			return -1;
+		}
+
+		// Checks collision with raycast in the Direction Vector direction
+		async checkCollision() {
+
+			const rayLength = 3;
+			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+	
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(this.position, this.directionVector, rayLength, filterFlags);
+			if (touches.length > 0)
+			{
+				return true;
+			}
+			return false;
+		}
+
+		/*
+		WANDER METHODS
+		*/
 
 		// Sets Direction Vector based on Direction for the wandering phase
 		getWanderDirection() {
@@ -713,39 +647,6 @@ async function ButtonEnigma(){
 			this.directionVector = directionTable[this.direction];
 		}
 
-		getEnemyPos() {
-
-			const enemyTransform = this.enemyEntity.getGlobalTransform();
-			return enemyTransform.position;
-		}
-
-		setEnemyPos(x, y, z) {
-			
-			this.enemyEntity.setGlobalTransform({ position : [x, y, z] })
-		}
-
-		// Sets the enemy orientation
-		orientEnemy() {
-
-			let angle = Math.atan2(this.directionVector[0], this.directionVector[2]);
-			let quaternion = [0, Math.sin(angle / 2), 0, Math.cos(angle/2)]
-
-			this.enemyEntity.setGlobalTransform({ orientation : quaternion})
-		}
-
-		// Checks collision with raycast in the Direction Vector direction
-		async checkCollision() {
-
-			const rayLength = 3;
-			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-	
-			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
-			if (touches.length > 0)
-			{
-				return true;
-			}
-			return false;
-		}
 
 		// Manages Colision for wandering phase
 		wanderCollision() {
@@ -755,47 +656,119 @@ async function ButtonEnigma(){
 			this.direction = (this.direction + randomDirection) % 4;
 			this.getWanderDirection()
 			this.orientEnemy();
-		}
-
-		// Adjusts the height of the enemy
-		async adjustHeight() {
-			let origin = enemyPos;
-			let directionVector = [0, -1, 0];
-			let rayLength = 5;
-			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-			
-			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-			if (touches.length > 0)
-			{
-				let hitPoint = touches[0].position[1];
-				return hitPoint + this.height;
-			}
-			return -1;
+			this.detect = true;
 		}
 
 		// Wandering Phase movement managment
-		async wander() {
+		async wanderLogic() {
+
 			this.getWanderDirection()
-			let enemyPos = this.getEnemyPos()
+
+			const height = await this.adjustHeight();
+
 			this.setEnemyPos(
-				enemyPos[0] + this.directionVector[0] * this.speed,
-				this.adjustHeight(),
-				enemyPos[2] + this.directionVector[2] * this.speed
+				this.position[0] + this.directionVector[0] * this.speed, // X
+				height,													 // Y
+				this.position[2] + this.directionVector[2] * this.speed  // Z
 			)
 
-			if (this.checkCollision() == true) {
+			const isCollision = await this.checkCollision();
+			if (isCollision && this.detect) {
+				this.detect = false;
 				this.wanderCollision();
 			}
 		}
+
+		/*
+		FOLLOW METHODS
+		*/
+
+		// Calclates the normalized directionVector for the Follow Phase
+		getFollowDirection() {
+
+			let cameraTransform = camera.getTransform();
+			let playerPos = cameraTransform.position;
+			let enemyPos = this.position;
+
+			let directionVector = [
+				playerPos[0] - enemyPos[0], // X
+				playerPos[1] - enemyPos[1], // Y
+				playerPos[2] - enemyPos[2]  // Z
+			];
+
+			let magnitude = Math.sqrt(directionVector[0]*directionVector[0] + directionVector[1]*directionVector[1] + directionVector[2]*directionVector[2])
+			
+			directionVector = [
+				directionVector[0] / magnitude, // X
+				directionVector[1] / magnitude, // Y
+				directionVector[2] / magnitude  // Z
+			]
+
+			this.directionVector = directionVector;
+		}
+
+		// Manages colision for the Follow Phase
+		followCollision() {
+			this.detect = true;
+		}
+
+		// Follow phase movement managment
+		async followLogic() {
+
+			this.getFollowDirection();
+			
+			const height = await this.adjustHeight();
+
+			let directionX = this.directionVector[0];
+			let directionZ = this.directionVector[2];
+			if (directionX < 0) {
+				directionX = -directionX;
+			}
+			if (directionZ < 0) {
+				directionZ = -directionZ;
+			}
+			let distanceRatio = directionX + directionZ
+
+			this.setEnemyPos(
+				this.position[0] + this.directionVector[0] / distanceRatio * this.speed, // X
+				height,													 				 // Y
+				this.position[2] + this.directionVector[2] / distanceRatio * this.speed  // Z
+			)
+
+			this.orientEnemy();
+			/*
+			
+			const isCollision = await this.checkCollision();
+			if (isCollision && this.detect) {
+				this.detect = false;
+			}
+			*/
+		}
 	}
-	/*
+	
 	const enemy1 = new Enemy([2, -4, 3], phantomMeshUUID, "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484", 1, 3 / 60, 1);
-	enemy1.initialize().then(() => {
-		// Do something after enemy initialization
-	}).catch((err) => {
-		// Handle initialization errors
-	});
-	*/
+	enemy1.initializeEnemy().then(() => {
+		function boucle() {
+			if (isBehavior) {
+				enemy1.wanderLogic();
+			}
+			else
+			{
+				enemy1.followLogic();
+			}
+			setFPSCameraController(document.getElementById("display-canvas"));
+			window.requestAnimationFrame(boucle);
+		}
+		window.requestAnimationFrame(boucle);
+	})
+
+	function changeBehavior(event) {
+		if (event.key === 'p') { // Change behavior on pressing 'p' key
+			isBehavior = !isBehavior; // Toggle behavior
+		}
+	}
+	document.addEventListener('keypress', changeBehavior);
+
 	/*
 	async function InitEnemy(enemyUUID){
 		const enemyTemplate = new SDK3DVerse.EntityTemplate();
@@ -827,82 +800,7 @@ async function ButtonEnigma(){
 		}
 
 		let direction = 0;
-		let height = 1;
-		
 
-		
-		 
-		async function manageHeight(enemyPos, height){
-			let offset = 0.02;
-
-			let origin = enemyPos;
-			let directionVector = [0, -1, 0];
-			let rayLength = height;
-			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-			
-			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-			if (touches.length > 0)
-			{
-				while (touches.length > 0) {
-					origin[1] += offset;
-				}
-			}
-			else
-			{
-				while (touches.length <= 0) {
-					origin[1] -= offset;
-				}
-			}
-			let heightTransform = enemyEntity.getGlobalTransform();
-
-		}
-		
-
-		async function wanderEnemy(){
-
-			// X and Z Position Managment
-			let enemyPos = enemyTransform.position;
-			
-			let directionVector = directionTable[direction]
-			
-			
-			// Orientation Managment
-			let angle = Math.atan2(directionVector[0], directionVector[2]);
-			let a = 0,
-				b = Math.sin(angle / 2),
-				c = 0,
-				d = Math.cos(angle / 2);
-			let quaternion = [a, b, c, d];
-			enemyTransform.orientation = quaternion;
-			
-			// Height Managment 
-			let enemyHeight = manageHeight(enemyPos, height);
-			
-
-			// Setting New Enemy Position
-			enemyPos = [
-				enemyPos[0] + directionVector[0] * distance, // X
-				1,											 // Y
-				enemyPos[2] + directionVector[2] * distance  // Z
-			]
-
-			enemyTransform.position = enemyPos;
-			enemyEntity.setGlobalTransform(enemyTransform);
-
-			// Raycast
-			let origin = enemyTransform.position;
-	
-			const rayLength = 3;
-			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-	
-			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-			console.log(touches)
-			if (touches.length > 0)
-			{
-				const randomDirection = Math.floor(Math.random() * 3) + 1;
-				direction = (direction + randomDirection) % 4;
-			}
-		}
 		async function followEnemy(){
 
 			let cameraTransform = camera.getTransform();
@@ -963,12 +861,6 @@ async function ButtonEnigma(){
 
 	async function InitGrabbable(){
 		let cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('cubeEntity');
-		grabbable.push(...cubes);
-		cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('redCube');
-		grabbable.push(...cubes);
-		cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('purpleCube');
-		grabbable.push(...cubes);
-		cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('lightCube');
 		grabbable.push(...cubes);
 	}
 
