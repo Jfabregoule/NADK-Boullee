@@ -684,6 +684,141 @@ async function ButtonEnigma(){
 ---------------------------------------------------------------------------------------------
 */
 
+	class Enemy {
+
+		// Construction and Initialization of the enemy entity
+		constructor(initialPos, enemyUUID, materialRefValue, maxHP, speed, height) {
+			this.initialPos = initialPos;
+			this.enemyUUID = enemyUUID;
+			this.materialRefValue = materialRefValue;
+			this.maxHP = maxHP;
+			this.speed = speed;
+			this.height = height;
+			this.enemyEntity = null;
+			this.HP = maxHP;
+			this.direction = 0;
+			this.directionVector = [0, 0, 1];
+		}
+
+		async initialize() {
+			const enemyTemplate = new SDK3DVerse.EntityTemplate();
+
+			enemyTemplate.attachComponent('mesh_ref', { value: this.enemyUUID });
+			enemyTemplate.attachComponent('material_ref', { value: this.materialRefValue });
+			enemyTemplate.attachComponent('physics_material');
+
+			const parentEntity = null;
+			const deleteOnClientDisconnection = true;
+
+			this.enemyEntity = await enemyTemplate.instantiateTransientEntity(
+				"enemy",
+				parentEntity,
+				deleteOnClientDisconnection
+			);
+
+			let enemyTransform = this.enemyEntity.getGlobalTransform();
+			enemyTransform.position = this.initialPos;
+			enemyTransform.scale = [2, 2, 2];
+			this.enemyEntity.setGlobalTransform(enemyTransform);
+		}
+
+		// Sets Direction Vector based on Direction for the wandering phase
+		getWanderDirection() {
+
+			const directionTable = {
+				0 : [0, 0, 1],
+				1 : [1, 0, 0],
+				2 : [0, 0, -1],
+				3 : [-1, 0, 0]
+			}
+
+			this.directionVector = directionTable[this.direction];
+		}
+
+		getEnemyPos() {
+
+			const enemyTransform = this.enemyEntity.getGlobalTransform();
+			return enemyTransform.position;
+		}
+
+		setEnemyPos(x, y, z) {
+
+			this.enemyEntity.setGlobalTransform({ position : [x, y, z] })
+		}
+
+		// Sets the enemy orientation
+		orientEnemy() {
+
+			let angle = Math.atan2(this.directionVector[0], this.directionVector[2]);
+			let quaternion = [0, Math.sin(angle / 2), 0, Math.cos(angle/2)]
+
+			this.enemyEntity.setGlobalTransform({ orientation : quaternion})
+		}
+
+		// Checks collision with raycast in the Direction Vector direction
+		async checkCollision() {
+
+			const rayLength = 3;
+			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
+			if (touches.length > 0)
+			{
+				return true;
+			}
+			return false;
+		}
+
+		// Manages Colision for wandering phase
+		wanderCollision() {
+
+			const randomDirection = Math.floor(Math.random() * 3) + 1;
+
+			this.direction = (this.direction + randomDirection) % 4;
+			this.getWanderDirection()
+			this.orientEnemy();
+		}
+
+		// Adjusts the height of the enemy
+		async adjustHeight() {
+			let origin = enemyPos;
+			let directionVector = [0, -1, 0];
+			let rayLength = 5;
+			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+
+			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
+			if (touches.length > 0)
+			{
+				let hitPoint = touches[0].position[1];
+				return hitPoint + this.height;
+			}
+			return -1;
+		}
+
+		// Wandering Phase movement managment
+		async wander() {
+			this.getWanderDirection()
+			let enemyPos = this.getEnemyPos()
+			this.setEnemyPos(
+				enemyPos[0] + this.directionVector[0] * this.speed,
+				this.adjustHeight(),
+				enemyPos[2] + this.directionVector[2] * this.speed
+			)
+
+			if (this.checkCollision() == true) {
+				this.wanderCollision();
+			}
+		}
+	}
+	/*
+	const enemy1 = new Enemy([2, -4, 3], phantomMeshUUID, "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484", 1, 3 / 60, 1);
+	enemy1.initialize().then(() => {
+		// Do something after enemy initialization
+	}).catch((err) => {
+		// Handle initialization errors
+	});
+	*/
+	/*
 	async function InitEnemy(enemyUUID){
 		const enemyTemplate = new SDK3DVerse.EntityTemplate();
 		enemyTemplate.attachComponent('mesh_ref', { value : enemyUUID });
@@ -706,6 +841,7 @@ async function ButtonEnigma(){
 		let enemyTransform = enemyEntity.getGlobalTransform();
 		enemyTransform.scale = [0.7, 0.7, 0.7];
 
+		const directionTable = {
 		let direction = 0;
 		let height = 1;
 
@@ -715,7 +851,12 @@ async function ButtonEnigma(){
 			2 : [0, 0, -1],
 			3 : [-1, 0, 0]
 		}
-		/*
+
+		let direction = 0;
+		let height = 1;
+
+
+
 
 		async function manageHeight(enemyPos, height){
 			let offset = 0.02;
@@ -741,7 +882,7 @@ async function ButtonEnigma(){
 			let heightTransform = enemyEntity.getGlobalTransform();
 
 		}
-		*/
+
 
 		async function wanderEnemy(){
 
@@ -749,6 +890,7 @@ async function ButtonEnigma(){
 			let enemyPos = enemyTransform.position;
 
 			let directionVector = directionTable[direction]
+
 
 			// Orientation Managment
 			let angle = Math.atan2(directionVector[0], directionVector[2]);
@@ -759,10 +901,9 @@ async function ButtonEnigma(){
 			let quaternion = [a, b, c, d];
 			enemyTransform.orientation = quaternion;
 
-			/*
 			// Height Managment
 			let enemyHeight = manageHeight(enemyPos, height);
-			*/
+
 
 			// Setting New Enemy Position
 			enemyPos = [
@@ -781,6 +922,7 @@ async function ButtonEnigma(){
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
+			console.log(touches)
 			if (touches.length > 0)
 			{
 				const randomDirection = Math.floor(Math.random() * 3) + 1;
@@ -835,7 +977,7 @@ async function ButtonEnigma(){
 		}
 	}
 	document.addEventListener('keypress', changeBehavior);
-
+	*/
 
 /*
 ---------------------------------------------------------------------------------------------
