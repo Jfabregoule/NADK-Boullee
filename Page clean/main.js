@@ -238,6 +238,17 @@ let grabbable = [];
 
 let tagged = [];
 
+let enigmaDetectors;
+let enigmaEntities;
+const wall = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall'))[0];
+const codeInteract = (await SDK3DVerse.engineAPI.findEntitiesByNames('codeInteract'))[0]
+let red = false;
+let purple = false;
+let light = false;
+let code = ['1','2','3'];
+let codeTry = []
+let lastBtn  = null
+
 async function GetTags()
 {
 	const componentFilter = { mandatoryComponents : ['tags']};
@@ -277,9 +288,7 @@ await GetTags();
 					PlayCinematic();
 					hasSeenCinematic = true;
 				}
-				if (enigmaEntities.includes(entering) && enigmaDetectors.includes(zone)){
-					Enigma(entering,zone);
-				}
+				Enigma(entering,zone);
 				
 			});
 			SDK3DVerse.engineAPI.onExitTrigger((exiting, zone) =>
@@ -304,8 +313,8 @@ await GetTags();
 ---------------------------------------------------------------------------------------------
 */
 	async function InitEnigma(){
-		let enigmaDetectors = [];
-		let enigmaEntities = [];
+		enigmaDetectors = [];
+		enigmaEntities = [];
 		let detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('wallDetector'));
 		enigmaDetectors.push(...detector);
 		detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('redDetector'));
@@ -326,34 +335,26 @@ await GetTags();
 	}
 	InitEnigma()
 
-	const wall = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall'))[0];
-	const codeInteract = (await SDK3DVerse.engineAPI.findEntitiesByNames('codeInteract'))[0]
-	let red = false;
-	let purple = false;
-	let light = false;
-	let code = ['1','2','3'];
-	let codeTry = []
-	let lastBtn  = null
-
 	async function Enigma(entity, detector){
-		if (entity.getName() == 'cubeEntity' && detector.getName() == 'wallDetector'){
-			wall.setVisibility(false);	
-			wall.detachComponent('physics_material');
+		if (enigmaEntities.includes(entity) && enigmaDetectors.includes(detector)){
+			if (entity.getName() == 'cubeEntity' && detector.getName() == 'wallDetector'){
+				wall.setVisibility(false);	
+				wall.detachComponent('physics_material');
+			}
+			if (entity.getName() == 'redCube' && detector.getName() == 'redDetector'){
+				red = true;
+			}
+			if (entity.getName() == 'purpleCube' && detector.getName() == 'purpleDetector'){
+				purple = true;
+			}
+			if (entity.getName() == 'lightCube' && detector.getName() == 'lightDetector'){
+				light = true;
+			}
+	
+			if (red && purple && light){
+				console.log("BOUBOUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUULE MON BÉBÉ DÉFONCE MOIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII")
+			}
 		}
-		if (entity.getName() == 'redCube' && detector.getName() == 'redDetector'){
-			red = true;
-		}
-		if (entity.getName() == 'purpleCube' && detector.getName() == 'purpleDetector'){
-			purple = true;
-		}
-		if (entity.getName() == 'lightCube' && detector.getName() == 'lightDetector'){
-			light = true;
-		}
-
-		if (red && purple && light){
-			console.log("BOUBOUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUULE MON BÉBÉ DÉFONCE MOIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII")
-		}
-
 	}
 
 	document.addEventListener('keyup',(event)=>{
@@ -398,12 +399,12 @@ await GetTags();
 					if (block.entity.getComponent('tags').value[0] == 'button'){
 						if (lastBtn != null){
 							let pos = lastBtn.getGlobalTransform().position;
-							lastBtn.setGlobalTransform({position: [pos[0] + 0.05, pos[1], pos[2]]});
+							lastBtn.setGlobalTransform({position: [pos[0] - 0.05, pos[1], pos[2]]});
 							lastBtn = null;
 						}
 						codeTry.push(block.entity.getComponent('tags').value[1])
 						let pos = block.entity.getGlobalTransform().position;
-						block.entity.setGlobalTransform({position : [pos[0] - 0.05, pos[1], pos[2]]});
+						block.entity.setGlobalTransform({position : [pos[0] + 0.05, pos[1], pos[2]]});
 						lastBtn = block.entity;
 					}
 				}
