@@ -241,6 +241,7 @@ let tagged = [];
 let enigmaDetectors;
 let enigmaEntities;
 const wall = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall'))[0];
+const wall2 = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall2'))[0];
 const codeInteract = (await SDK3DVerse.engineAPI.findEntitiesByNames('codeInteract'))[0]
 let red = false;
 let purple = false;
@@ -337,6 +338,7 @@ await GetTags();
 
 	async function Enigma(entity, detector){
 		if (enigmaEntities.includes(entity) && enigmaDetectors.includes(detector)){
+			
 			if (entity.getName() == 'cubeEntity' && detector.getName() == 'wallDetector'){
 				wall.setVisibility(false);	
 				wall.detachComponent('physics_material');
@@ -352,7 +354,8 @@ await GetTags();
 			}
 	
 			if (red && purple && light){
-				console.log("BOUBOUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUULE MON BÉBÉ DÉFONCE MOIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII")
+				wall2.setVisibility(false);	
+				wall2.detachComponent('physics_material');
 			}
 		}
 	}
