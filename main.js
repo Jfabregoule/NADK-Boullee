@@ -292,6 +292,7 @@ async function Game(){
 					PlayCinematic();
 					hasSeenCinematic = true;
 				}
+				Enigma(entering,zone);
 			});
 			SDK3DVerse.engineAPI.onExitTrigger((exiting, zone) =>
 			{
