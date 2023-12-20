@@ -567,8 +567,6 @@ async function Game(){
 			this.directionVector = [0, 0, 1];
 		}
 
-		async initialize() {
-
 		// Deletes enemy
 		destroy() {
 			delete this;
@@ -591,37 +589,12 @@ async function Game(){
 				deleteOnClientDisconnection
 			);
 
-			let enemyTransform = this.enemyEntity.getGlobalTransform();
-
 			let enemyTransform = await this.enemyEntity.getGlobalTransform();
 			enemyTransform.position = this.initialPos;
 			enemyTransform.scale = [0.7, 0.7, 0.7];
 			this.enemyEntity.setGlobalTransform(enemyTransform);
 		}
-
-		// Sets Direction Vector based on Direction for the wandering phase
-		getWanderDirection() {
-
-			const directionTable = {
-				0 : [0, 0, 1],
-				1 : [1, 0, 0],
-				2 : [0, 0, -1],
-				3 : [-1, 0, 0]
-			}
-
-			this.directionVector = directionTable[this.direction];
-		}
-
-		getEnemyPos() {
-
-			const enemyTransform = this.enemyEntity.getGlobalTransform();
-			return enemyTransform.position;
-		}
-
-		setEnemyPos(x, y, z) {
-
-			this.enemyEntity.setGlobalTransform({ position : [x, y, z] })
-
+		
 		// Sets the enemy position
 		setEnemyPos(x, y, z) {
 			this.position = [x, y, z];
@@ -635,23 +608,23 @@ async function Game(){
 				this.destroy();
 			}
 		}
-
+		
 		// Sets the enemy orientation
 		orientEnemy() {
-
+			
 			let angle = Math.atan2(this.directionVector[0], this.directionVector[2]);
 			let quaternion = [0, Math.sin(angle / 2), 0, Math.cos(angle/2)]
-
+			
 			this.enemyEntity.setGlobalTransform({ orientation : quaternion })
 		}
-
+		
 		// Adjusts the height of the enemy
 		async adjustHeight() {
 			let origin = this.position;
 			let directionVector = [0, -1, 0];
 			let rayLength = 15;
 			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-
+			
 			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
 			if (touches.length > 0)
 			{
@@ -666,8 +639,6 @@ async function Game(){
 
 			const rayLength = 3;
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-
-			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
 
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(this.position, this.directionVector, rayLength, filterFlags);
 			if (touches.length > 0)
@@ -703,22 +674,6 @@ async function Game(){
 			this.direction = (this.direction + randomDirection) % 4;
 			this.getWanderDirection()
 			this.orientEnemy();
-		}
-
-		// Adjusts the height of the enemy
-		async adjustHeight() {
-			let origin = enemyPos;
-			let directionVector = [0, -1, 0];
-			let rayLength = 5;
-			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-
-			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-			if (touches.length > 0)
-			{
-				let hitPoint = touches[0].position[1];
-				return hitPoint + this.height;
-			}
-			return -1;
 			this.detect = true;
 		}
 
@@ -760,7 +715,7 @@ async function Game(){
 			];
 
 			let magnitude = Math.sqrt(directionVector[0]*directionVector[0] + directionVector[1]*directionVector[1] + directionVector[2]*directionVector[2])
-
+			
 			directionVector = [
 				directionVector[0] / magnitude, // X
 				directionVector[1] / magnitude, // Y
@@ -779,7 +734,7 @@ async function Game(){
 		async followLogic() {
 
 			this.getFollowDirection();
-
+			
 			const height = await this.adjustHeight();
 
 			let directionX = this.directionVector[0];
@@ -800,7 +755,7 @@ async function Game(){
 
 			this.orientEnemy();
 			/*
-
+			
 			const isCollision = await this.checkCollision();
 			if (isCollision && this.detect) {
 				this.detect = false;
@@ -826,173 +781,12 @@ async function Game(){
 	})
 
 	function changeBehavior(event) {
-		if (event.key === 'p') { // Change behavior on pressing 'p' key
-			isBehavior = !isBehavior; // Toggle behavior
+		if (event.key === 'p') { 
+			isBehavior = !isBehavior; 
 		}
 	}
 	document.addEventListener('keypress', changeBehavior);
 
-	/*
-	async function InitEnemy(enemyUUID){
-		const enemyTemplate = new SDK3DVerse.EntityTemplate();
-		enemyTemplate.attachComponent('mesh_ref', { value : enemyUUID });
-		enemyTemplate.attachComponent('material_ref', { value : "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484" });
-
-		enemyTemplate.attachComponent('physics_material');
-
-		const parentEntity = null;
-		const deleteOnClientDisconnection = true;
-
-		const enemyEntity = await enemyTemplate.instantiateTransientEntity(
-			"enemy",
-			parentEntity,
-			deleteOnClientDisconnection
-		);
-		enemyEntity.setGlobalTransform({ position : [0, 1, 0] });
-
-		let distance = 3 / 60;
-
-		let enemyTransform = enemyEntity.getGlobalTransform();
-		enemyTransform.scale = [0.7, 0.7, 0.7];
-
-		const directionTable = {
-		let direction = 0;
-		let height = 1;
-
-		let directionTable = {
-			0 : [0, 0, 1],
-			1 : [1, 0, 0],
-			2 : [0, 0, -1],
-			3 : [-1, 0, 0]
-		}
-
-		let direction = 0;
-		let height = 1;
-
-
-
-
-		async function manageHeight(enemyPos, height){
-			let offset = 0.02;
-
-			let origin = enemyPos;
-			let directionVector = [0, -1, 0];
-			let rayLength = height;
-			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-
-			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-			if (touches.length > 0)
-			{
-				while (touches.length > 0) {
-					origin[1] += offset;
-				}
-			}
-			else
-			{
-				while (touches.length <= 0) {
-					origin[1] -= offset;
-				}
-			}
-			let heightTransform = enemyEntity.getGlobalTransform();
-
-		}
-
-
-		async function wanderEnemy(){
-
-			// X and Z Position Managment
-			let enemyPos = enemyTransform.position;
-
-			let directionVector = directionTable[direction]
-
-
-			// Orientation Managment
-			let angle = Math.atan2(directionVector[0], directionVector[2]);
-			let a = 0,
-				b = Math.sin(angle / 2),
-				c = 0,
-				d = Math.cos(angle / 2);
-			let quaternion = [a, b, c, d];
-			enemyTransform.orientation = quaternion;
-
-			// Height Managment
-			let enemyHeight = manageHeight(enemyPos, height);
-
-
-			// Setting New Enemy Position
-			enemyPos = [
-				enemyPos[0] + directionVector[0] * distance, // X
-				1,											 // Y
-				enemyPos[2] + directionVector[2] * distance  // Z
-			]
-
-			enemyTransform.position = enemyPos;
-			enemyEntity.setGlobalTransform(enemyTransform);
-
-			// Raycast
-			let origin = enemyTransform.position;
-
-			const rayLength = 3;
-			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-
-			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
-			console.log(touches)
-			if (touches.length > 0)
-			{
-				const randomDirection = Math.floor(Math.random() * 3) + 1;
-				direction = (direction + randomDirection) % 4;
-			}
-		}
-
-		async function followEnemy(){
-
-			let cameraTransform = camera.getTransform();
-			let playerPos = cameraTransform.position;
-			let enemyPos = enemyTransform.position;
-
-			let directionVector = [
-				playerPos[0] - enemyPos[0], // X
-				playerPos[1] - enemyPos[1], // Y
-				playerPos[2] - enemyPos[2]  // Z
-			];
-
-			let magnitude = Math.sqrt(directionVector[0]*directionVector[0] + directionVector[1]*directionVector[1] + directionVector[2]*directionVector[2])
-
-			directionVector = [
-				directionVector[0] / magnitude,
-				directionVector[1] / magnitude,
-				directionVector[2] / magnitude
-			]
-
-			let distanceRatio = directionVector[0] + directionVector[1] + directionVector[2]
-
-			enemyTransform.position = [
-				enemyPos[0] + directionVector[0] / distanceRatio * distance,
-				enemyPos[1] + directionVector[1] / distanceRatio * distance,
-				enemyPos[2] + directionVector[2] / distanceRatio * distance
-			]
-		}
-		function boucle() {
-			if (isBehavior) {
-				wanderEnemy();
-			} else {
-				followEnemy();
-				console.log("2");
-			}
-			setFPSCameraController(document.getElementById("display-canvas"));
-			window.requestAnimationFrame(boucle);
-		}
-		window.requestAnimationFrame(boucle);
-	}
-
-	await InitEnemy(phantomMeshUUID);
-	function changeBehavior(event) {
-		if (event.key === 'p') { // Change behavior on pressing 'p' key
-			isBehavior = !isBehavior; // Toggle behavior
-		}
-	}
-	document.addEventListener('keypress', changeBehavior);
-	*/
 
 /*
 ---------------------------------------------------------------------------------------------
