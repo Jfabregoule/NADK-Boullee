@@ -240,6 +240,18 @@ async function Game(){
 
 	let tagged = [];
 
+	let enigmaDetectors;
+	let enigmaEntities;
+	const wall = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall'))[0];
+	const wall2 = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall2'))[0];
+	const codeInteract = (await SDK3DVerse.engineAPI.findEntitiesByNames('codeInteract'))[0]
+	let red = false;
+	let purple = false;
+	let light = false;
+	let code = ['1','2','3'];
+	let codeTry = []
+	let lastBtn  = null
+
 	async function GetTags()
 	{
 		const componentFilter = { mandatoryComponents : ['tags']};
