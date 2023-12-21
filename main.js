@@ -665,19 +665,6 @@ async function Game(){
 			return -1;
 		}
 
-		// Checks collision with raycast in the Direction Vector direction
-		async checkCollision() {
-
-			const rayLength = 3;
-			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-
-			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(this.position, this.directionVector, rayLength, filterFlags);
-			if (touches.length > 0)
-			{
-				return true;
-			}
-			return false;
-		}
 
 		/*
 		WANDER METHODS
@@ -696,9 +683,22 @@ async function Game(){
 			this.directionVector = directionTable[this.direction];
 		}
 
+		// Checks collision with raycast in the Direction Vector direction
+		async checkWanderCollision() {
+
+			const rayLength = 1;
+			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(this.position, this.directionVector, rayLength, filterFlags);
+			if (touches.length > 0)
+			{
+				return true;
+			}
+			return false;
+		}
 
 		// Manages Colision for wandering phase
-		wanderCollision() {
+		wanderCollisionManagment() {
 
 			const randomDirection = Math.floor(Math.random() * 3) + 1;
 
@@ -721,10 +721,10 @@ async function Game(){
 				this.position[2] + this.directionVector[2] * this.speed  // Z
 			)
 
-			const isCollision = await this.checkCollision();
+			const isCollision = await this.checkWanderCollision();
 			if (isCollision && this.detect) {
 				this.detect = false;
-				this.wanderCollision();
+				this.wanderCollisionManagment();
 			}
 		}
 
@@ -733,7 +733,7 @@ async function Game(){
 		*/
 
 		// Calclates the normalized directionVector for the Follow Phase
-		getFollowDirection() {
+		async getFollowDirection() {
 
 			let cameraTransform = camera.getTransform();
 			let playerPos = cameraTransform.position;
@@ -754,36 +754,43 @@ async function Game(){
 			]
 
 			this.directionVector = directionVector;
-		}
+			console.log(magnitude)
+			const rayLength = magnitude;
+			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 
-		// Manages colision for the Follow Phase
-		followCollision() {
-			this.detect = true;
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(this.position, this.directionVector, rayLength, filterFlags);
+			if (magnitude < 1 || touches.length > 0) {
+				return true
+			}
+			else
+			{
+				return false
+			}
 		}
 
 		// Follow phase movement managment
 		async followLogic() {
 
-			this.getFollowDirection();
+			let isCollision = await this.getFollowDirection();
+if (!isCollision) {
+				const height = await this.adjustHeight();
 
-			const height = await this.adjustHeight();
+				let directionX = this.directionVector[0];
+				let directionZ = this.directionVector[2];
+				if (directionX < 0) {
+					directionX = -directionX;
+				}
+				if (directionZ < 0) {
+					directionZ = -directionZ;
+				}
+				let distanceRatio = directionX + directionZ
 
-			let directionX = this.directionVector[0];
-			let directionZ = this.directionVector[2];
-			if (directionX < 0) {
-				directionX = -directionX;
+				this.setEnemyPos(
+					this.position[0] + this.directionVector[0] / distanceRatio * this.speed, // X
+					height,													 				 // Y
+					this.position[2] + this.directionVector[2] / distanceRatio * this.speed  // Z
+				)
 			}
-			if (directionZ < 0) {
-				directionZ = -directionZ;
-			}
-			let distanceRatio = directionX + directionZ
-
-			this.setEnemyPos(
-				this.position[0] + this.directionVector[0] / distanceRatio * this.speed, // X
-				height,													 				 // Y
-				this.position[2] + this.directionVector[2] / distanceRatio * this.speed  // Z
-			)
-
 			this.orientEnemy();
 			/*
 
