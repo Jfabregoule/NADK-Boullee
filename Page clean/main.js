@@ -41,7 +41,7 @@ window.addEventListener("load", InitApp);
 
 //------------------------------------------------------------------------------
 async function InitApp() {
-	await SDK3DVerse.startSession({
+	await SDK3DVerse.joinOrStartSession({
 		userToken: publicToken,
 		sceneUUID: mainSceneUUID,
 		canvas: document.getElementById("display-canvas"),
@@ -306,7 +306,7 @@ async function Game(){
 	}
 	await checkColls();
 
-	/*
+/*
 ---------------------------------------------------------------------------------------------
 |																							|
 |										Enigma												|
@@ -413,8 +413,8 @@ async function ButtonEnigma(){
 			}
 		}
 	}
-	if (codeTry.length != 3){
-		codeInteract.setComponent('material_ref',{value : "cf7f45ff-014b-4c2c-90fa-1deb01a2a4bb"});
+	if (codeTry.length != 3 && codeTry.length > 0){
+		codeInteract.setComponent('material_ref',{value : "2c1b95cd-b15d-4855-8ae3-f4686700b524"});
 	}
 	if (JSON.stringify(code) == JSON.stringify(codeTry)){
 		codeTry = [];
