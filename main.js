@@ -240,6 +240,18 @@ async function Game(){
 
 	let tagged = [];
 
+	let enigmaDetectors;
+	let enigmaEntities;
+	const wall = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall'))[0];
+	const wall2 = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall2'))[0];
+	const codeInteract = (await SDK3DVerse.engineAPI.findEntitiesByNames('codeInteract'))[0]
+	let red = false;
+	let purple = false;
+	let light = false;
+	let code = ['1','2','3'];
+	let codeTry = []
+	let lastBtn  = null
+
 	async function GetTags()
 	{
 		const componentFilter = { mandatoryComponents : ['tags']};
@@ -284,7 +296,6 @@ async function Game(){
 					{
 						let Playertransform = player.getGlobalTransform();
 						let lightTransform = zone.getGlobalTransform();
-						console.log(Playertransform.position);
 						Playertransform.position[0] = lightTransform.position[0];
 						Playertransform.position[1] = camera.getTransform().position[1] - 2.5;
 						Playertransform.position[2] = lightTransform.position[2];
@@ -298,6 +309,7 @@ async function Game(){
 					PlayCinematic();
 					hasSeenCinematic = true;
 				}
+				Enigma(entering, zone);
 			});
 			SDK3DVerse.engineAPI.onExitTrigger((exiting, zone) =>
 			{
@@ -333,8 +345,13 @@ async function Game(){
 
 	async function ResizeBeam(mirror)
 	{
+		let beam;
 		let children = await mirror.getChildren();
-		let beam = children[1];
+		for (let i = 0; i < children.length; i++)
+		{
+			if (focusedBeams.includes(children[i]))
+				beam = children[i];
+		}
 		let mirrorTransform = mirror.getGlobalTransform();
 
 		// Vecteur initial pointant vers l'avant (par exemple, l'axe -Z)
@@ -375,13 +392,13 @@ async function Game(){
 		};
 
 		const origin = [
-			mirrorTransform.position[0] + directionVector.x, // Multiplie par la distance souhaitée
+			mirrorTransform.position[0], // Multiplie par la distance souhaitée
 			mirrorTransform.position[1] + 0.5,
-			mirrorTransform.position[2] + directionVector.z
+			mirrorTransform.position[2]
 		];
 
 		const rayLength = 100;
-		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.static_body || SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 
 		// Effectuer le raycast
 		const { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, [directionVector.x, directionVector.y, directionVector.z], rayLength, filterFlags);
@@ -390,12 +407,26 @@ async function Game(){
 			if (mirrors.includes(touches[i].entity))
 				shootMirror(touches[i].entity);
 		}
-		console.log(block);
+		let FinalTransform = mirrorTransform;
+		console.log(touches);
+		if (touches && touches.length > 1 && (focusedBeams.includes(touches.entity) || mirrors.includes(touches.entity) || lights.includes(touches.entity)))
+			touches.shift();
+		if (touches && touches.length > 1) {
+			let distance = Math.sqrt(
+				Math.pow(mirrorTransform.position[0] - touches[0].position[0], 2) +
+				Math.pow(mirrorTransform.position[1] - touches[0].position[1], 2) +
+				Math.pow(mirrorTransform.position[2] - touches[0].position[2], 2)
+			);
+			FinalTransform.scale = [1, 1, distance];
+		} else {
+			// touches est undefined ou touches[0].position est undefined
+			FinalTransform.scale = [1, 1, 100]; // ou une autre valeur par défaut
+		}
+		//beam.setGlobalTransform(FinalTransform);
 	}
 
 	async function shootMirror(mirror)
 	{
-		console.log("Shoot");
 		let index = mirrors.findIndex(element => element === mirror);
 		if (index != -1 && MirrorsShoot[index] == false)
 		{
@@ -594,7 +625,7 @@ async function Game(){
 			enemyTransform.scale = [0.7, 0.7, 0.7];
 			this.enemyEntity.setGlobalTransform(enemyTransform);
 		}
-		
+
 		// Sets the enemy position
 		setEnemyPos(x, y, z) {
 			this.position = [x, y, z];
@@ -608,23 +639,23 @@ async function Game(){
 				this.destroy();
 			}
 		}
-		
+
 		// Sets the enemy orientation
 		orientEnemy() {
-			
+
 			let angle = Math.atan2(this.directionVector[0], this.directionVector[2]);
 			let quaternion = [0, Math.sin(angle / 2), 0, Math.cos(angle/2)]
-			
+
 			this.enemyEntity.setGlobalTransform({ orientation : quaternion })
 		}
-		
+
 		// Adjusts the height of the enemy
 		async adjustHeight() {
 			let origin = this.position;
 			let directionVector = [0, -1, 0];
 			let rayLength = 15;
 			let filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-			
+
 			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
 			if (touches.length > 0)
 			{
@@ -715,7 +746,7 @@ async function Game(){
 			];
 
 			let magnitude = Math.sqrt(directionVector[0]*directionVector[0] + directionVector[1]*directionVector[1] + directionVector[2]*directionVector[2])
-			
+
 			directionVector = [
 				directionVector[0] / magnitude, // X
 				directionVector[1] / magnitude, // Y
@@ -734,7 +765,7 @@ async function Game(){
 		async followLogic() {
 
 			this.getFollowDirection();
-			
+
 			const height = await this.adjustHeight();
 
 			let directionX = this.directionVector[0];
@@ -755,7 +786,7 @@ async function Game(){
 
 			this.orientEnemy();
 			/*
-			
+
 			const isCollision = await this.checkCollision();
 			if (isCollision && this.detect) {
 				this.detect = false;
@@ -781,8 +812,8 @@ async function Game(){
 	})
 
 	function changeBehavior(event) {
-		if (event.key === 'p') { 
-			isBehavior = !isBehavior; 
+		if (event.key === 'p') {
+			isBehavior = !isBehavior;
 		}
 	}
 	document.addEventListener('keypress', changeBehavior);
@@ -798,6 +829,12 @@ async function Game(){
 
 	async function InitGrabbable(){
 		let cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('cubeEntity');
+		grabbable.push(...cubes);
+		cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('redCube');
+		grabbable.push(...cubes);
+		cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('purpleCube');
+		grabbable.push(...cubes);
+		cubes = await SDK3DVerse.engineAPI.findEntitiesByNames('lightCube');
 		grabbable.push(...cubes);
 	}
 
@@ -845,10 +882,7 @@ async function Game(){
 		if (touches.length > 0)
 			console.log(touches[0].entity);
 		if (touches.length > 0 && buttons.includes(touches[0].entity))
-		{
-			console.log("test");
 			cubes[0].setGlobalTransform({position : [0, 0, 0]});
-		}
 	}
 
 	async function Grab(){
@@ -932,7 +966,7 @@ async function Game(){
 /*
 ---------------------------------------------------------------------------------------------
 |                                                                                            |
-|                                        Mirror                                                |
+|                                        Mirror                                              |
 |                                                                                            |
 ---------------------------------------------------------------------------------------------
 */
@@ -1002,6 +1036,128 @@ async function Game(){
 		//let transform = camera.getTransform();
 		//await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [-3.007635, 5.210598, 68.501045], camera.getTransform().orientation, 1, camera.getTransform().position, camera.getTransform().orientation);
 		//camera.setTransform(transform);
+	}
+
+/*
+---------------------------------------------------------------------------------------------
+|																							|
+|										Enigma												|
+|																							|
+---------------------------------------------------------------------------------------------
+*/
+
+	async function InitEnigma(){
+		enigmaDetectors = [];
+		enigmaEntities = [];
+		let detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('wallDetector'));
+		enigmaDetectors.push(...detector);
+		detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('redDetector'));
+		enigmaDetectors.push(...detector);
+		detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('purpleDetector'));
+		enigmaDetectors.push(...detector);
+		detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('lightDetector'));
+		enigmaDetectors.push(...detector);
+
+		let item = (await SDK3DVerse.engineAPI.findEntitiesByNames('cubeEntity'));
+		enigmaEntities.push(...item);
+		item = (await SDK3DVerse.engineAPI.findEntitiesByNames('redCube'));
+		enigmaEntities.push(...item);
+		item = (await SDK3DVerse.engineAPI.findEntitiesByNames('purpleCube'));
+		enigmaEntities.push(...item);
+		item = (await SDK3DVerse.engineAPI.findEntitiesByNames('lightCube'));
+		enigmaEntities.push(...item);
+	}
+	InitEnigma()
+
+	async function Enigma(entity, detector){
+		if (enigmaEntities.includes(entity) && enigmaDetectors.includes(detector)){
+
+			if (entity.getName() == 'cubeEntity' && detector.getName() == 'wallDetector'){
+				wall.setVisibility(false);
+				wall.detachComponent('physics_material');
+			}
+			if (entity.getName() == 'redCube' && detector.getName() == 'redDetector'){
+				red = true;
+			}
+			if (entity.getName() == 'purpleCube' && detector.getName() == 'purpleDetector'){
+				purple = true;
+			}
+			if (entity.getName() == 'lightCube' && detector.getName() == 'lightDetector'){
+				light = true;
+			}
+
+			if (red && purple && light){
+				wall2.setVisibility(false);
+				wall2.detachComponent('physics_material');
+			}
+		}
+	}
+
+	document.addEventListener('keyup',(event)=>{
+		if(event.key == 'f'){
+			ButtonEnigma();
+		}
+	})
+
+	async function ButtonEnigma(){
+		if (JSON.stringify(code) != JSON.stringify(codeTry)){
+			const cameraTransform = camera.getTransform();
+
+			// dirVect
+			let directionVector = [
+				SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[8],   // X
+				SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[9],   // Y
+				SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getWorldMatrix()[10]   // Z
+			];
+			// Normalise le vecteur si nécessaire
+			const magnitude = Math.sqrt(
+				directionVector[0] ** 2 + directionVector[1] ** 2 + directionVector[2] ** 2
+			);
+			directionVector = [
+				-directionVector[0] / magnitude,
+				-directionVector[1] / magnitude,
+				-directionVector[2] / magnitude
+			];
+
+			const origin = [
+			cameraTransform.position[0] + directionVector[0], // Multiplie par la distance souhaitée
+			cameraTransform.position[1] + directionVector[1],
+			cameraTransform.position[2] + directionVector[2]
+			];
+
+			const rayLength = 1;
+			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+			// Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
+			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
+			if (block != null )
+			{
+				if (block.entity.getComponent('tags')){
+					if (block.entity.getComponent('tags').value[0] == 'button'){
+						if (lastBtn != null){
+							let pos = lastBtn.getGlobalTransform().position;
+							lastBtn.setGlobalTransform({position: [pos[0] - 0.05, pos[1], pos[2]]});
+							lastBtn = null;
+						}
+						codeTry.push(block.entity.getComponent('tags').value[1])
+						let pos = block.entity.getGlobalTransform().position;
+						block.entity.setGlobalTransform({position : [pos[0] + 0.05, pos[1], pos[2]]});
+						lastBtn = block.entity;
+					}
+				}
+			}
+		}
+		if (codeTry.length != 3 && codeTry.length > 0){
+			codeInteract.setComponent('material_ref',{value : "2c1b95cd-b15d-4855-8ae3-f4686700b524"});
+		}
+		if (JSON.stringify(code) == JSON.stringify(codeTry)){
+			codeTry = [];
+			codeInteract.setComponent('material_ref',{value : "cf7f45ff-014b-4c2c-90fa-1deb01a2a4bb"});
+		}
+		if (codeTry.length == 3 && JSON.stringify(code) != JSON.stringify(codeTry)){
+			codeTry = [];
+			codeInteract.setComponent('material_ref',{value : "5629a0e5-e272-4be1-82e1-c8d6cef9ae76"});
+		}
+		return false;
 	}
 
 /*
