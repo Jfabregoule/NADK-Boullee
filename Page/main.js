@@ -3,6 +3,9 @@ import {
 	publicToken,
 	mainSceneUUID,
 	characterControllerSceneUUID,
+	objectMeshUUID,
+	mirrorSceneUUID,
+	phantomMeshUUID,
 } from "./config.js";
 
 //------------------------------------------------------------------------------
@@ -23,6 +26,9 @@ async function InitApp() {
 	await InitObject(objectMeshUUID);
   	await InitMirror(mirrorSceneUUID);
 	await InitEnemy(phantomMeshUUID);
+	// init console log for C++
+	const engineOutputEventUUID = "9d62edc3-d096-40fd-ba7d-60550c050cf1";
+	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
 }
 
 
@@ -46,7 +52,6 @@ async function setFPSCameraController(canvas){
 
 //------------------------------------------------------------------------------
 async function InitFirstPersonController(charCtlSceneUUID) {
-	console.log("hellow world");
 	// To spawn an entity we need to create an EntityTempllate and specify the
 	// components we want to attach to it. In this case we only want a scene_ref
 	// that points to the character controller scene.
@@ -104,7 +109,7 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 //// RAYCAST FUNCTION ////
 async function castRay(){
 	const cam = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0]
-			
+
 	const modulo = cam.getTransform.orientation % 360;
 	const pos = cam.getTransform.position;
 	const result = await SDK3DVerse.engineAPI.physicsRaycast(pos + (0.0, 2.0, 0.0), (Math.sin(modulo), 0.0, Math.cos(modulo)), 2.0);
@@ -324,7 +329,7 @@ async function InitMirror(mirror){
 		deleteOnClientDisconnection
 	);
 
-  mirrorEntity.setGlobalTransform({ position : [0, 0, 5] });
+  mirrorEntity.setGlobalTransform({ position : [0, 10, 5] });
 
 
   function boucle() {
@@ -334,37 +339,5 @@ async function InitMirror(mirror){
 	}
   window.requestAnimationFrame(boucle);
 }
-async function InitEnemy(enemyUUID){
-	const enemyTemplate = new SDK3DVerse.EntityTemplate();
-	enemyTemplate.attachComponent('mesh_ref', { value : enemyUUID });
-	enemyTemplate.attachComponent('material_ref', { value : "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484" });
-
-	enemyTemplate.attachComponent('physics_material');
-
-	const interval = 1000;
 
 
-	const parentEntity = Null;
-	const deleteOnClientDisconnection = true;
-
-	const enemyEntity = await enemyTemplate.instantiateTransientEntity(
-		"enemy",
-		parentEntity,
-		deleteOnClientDisconnection
-	);
-	enemyEntity.setGlobalTransform({ position : [0, 5, 3] });
-	let transform = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0].getTransform();
-
-	function moveEnemy(){
-			transform.position[2] += 2;
-			transform.position[1] += 1;
-			transform.orientation = [0,0,0,1];
-		enemyEntity.setGlobalTransform(transform);
-	}
-	function boucle() {
-		moveEnemy();
-		setFPSCameraController(document.getElementById("display-canvas"));
-		window.requestAnimationFrame(boucle);
-	}
-	window.requestAnimationFrame(boucle);
-}
