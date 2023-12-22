@@ -343,129 +343,6 @@ async function Game(){
 	window.requestAnimationFrame(actionQueueLoop);
 	}
 
-	async function ResizeBeam(mirror)
-	{
-		let beam;
-		let children = await mirror.getChildren();
-		for (let i = 0; i < children.length; i++)
-		{
-			if (focusedBeams.includes(children[i]))
-				beam = children[i];
-		}
-		let mirrorTransform = mirror.getGlobalTransform();
-
-		// Vecteur initial pointant vers l'avant (par exemple, l'axe -Z)
-		const forwardVector = { x: 0, y: 0, z: -1 };
-
-		// Effectuer la rotation du vecteur en fonction du quaternion
-		const x = mirrorTransform.orientation[0],
-			y = mirrorTransform.orientation[1],
-			z = mirrorTransform.orientation[2],
-			w = mirrorTransform.orientation[3];
-
-		// Appliquer la rotation du quaternion à ce vecteur
-		const x2 = x + x;
-		const y2 = y + y;
-		const z2 = z + z;
-		const xx = x * x2;
-		const xy = x * y2;
-		const xz = x * z2;
-		const yy = y * y2;
-		const yz = y * z2;
-		const zz = z * z2;
-		const wx = w * x2;
-		const wy = w * y2;
-		const wz = w * z2;
-
-		const rotatedDirection = {
-			x: forwardVector.x * (1.0 - (yy + zz)) + forwardVector.y * (xy - wz) + forwardVector.z * (xz + wy),
-			y: forwardVector.x * (xy + wz) + forwardVector.y * (1.0 - (xx + zz)) + forwardVector.z * (yz - wx),
-			z: forwardVector.x * (xz - wy) + forwardVector.y * (yz + wx) + forwardVector.z * (1.0 - (xx + yy))
-		};
-
-		// Normaliser le vecteur résultant
-		const magnitude = Math.sqrt(rotatedDirection.x * rotatedDirection.x + rotatedDirection.y * rotatedDirection.y + rotatedDirection.z * rotatedDirection.z);
-		const directionVector = {
-			x: rotatedDirection.x / magnitude,
-			y: rotatedDirection.y / magnitude,
-			z: rotatedDirection.z / magnitude
-		};
-
-		const origin = [
-			mirrorTransform.position[0], // Multiplie par la distance souhaitée
-			mirrorTransform.position[1] + 0.5,
-			mirrorTransform.position[2]
-		];
-
-		const rayLength = 100;
-		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-
-		// Effectuer le raycast
-		const { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, [directionVector.x, directionVector.y, directionVector.z], rayLength, filterFlags);
-		for (let i = 0; i < touches.length; i++)
-		{
-			if (mirrors.includes(touches[i].entity))
-				shootMirror(touches[i].entity);
-		}
-		let FinalTransform = mirrorTransform;
-		console.log(touches);
-		if (touches && touches.length > 1 && (focusedBeams.includes(touches.entity) || mirrors.includes(touches.entity) || lights.includes(touches.entity)))
-			touches.shift();
-		if (touches && touches.length > 1) {
-			let distance = Math.sqrt(
-				Math.pow(mirrorTransform.position[0] - touches[0].position[0], 2) +
-				Math.pow(mirrorTransform.position[1] - touches[0].position[1], 2) +
-				Math.pow(mirrorTransform.position[2] - touches[0].position[2], 2)
-			);
-			FinalTransform.scale = [1, 1, distance];
-		} else {
-			// touches est undefined ou touches[0].position est undefined
-			FinalTransform.scale = [1, 1, 100]; // ou une autre valeur par défaut
-		}
-		//beam.setGlobalTransform(FinalTransform);
-	}
-
-	async function shootMirror(mirror)
-	{
-		let index = mirrors.findIndex(element => element === mirror);
-		if (index != -1 && MirrorsShoot[index] == false)
-		{
-			MirrorsShoot[index] = true;
-			//let mirrorTransform = mirror.getComponent('local_transform');
-			let lightParentEntity = mirror;
-			let lightSceneEntity = await lightTemplate.instantiateTransientEntity(
-			"Light",
-			lightParentEntity,
-			true
-		);
-		lightSceneEntity.setGlobalTransform({scale : [1, 1, 50]})
-		let orientation = lightSceneEntity.getGlobalTransform().orientation;
-
-		lightSceneEntity.setGlobalTransform({orientation : orientation});
-		let position = lightSceneEntity.getGlobalTransform().position;
-		position[1] += 0.5;
-		lightSceneEntity.setGlobalTransform({position : position});
-		ResizeBeam(mirror);
-		focusedBeams.push(lightSceneEntity);
-		}
-	}
-
-	async function stopMirror(mirror)
-	{
-		const children = await mirror.getChildren();
-
-		// Vérifiez que l'élément à l'index 2 existe
-		if (children.length > 0) {
-
-			// Utilisez la méthode deleteEntities avec un tableau d'entités
-
-			SDK3DVerse.engineAPI.deleteEntities([children[0]]);
-			focusedBeams.shift();
-		} else {
-			console.error("L'élément à l'index 2 n'existe pas dans le tableau.");
-		}
-	}
-
 	async function	createfocusedbeam(){
 
 		const children = await perso.getChildren();
@@ -986,6 +863,117 @@ if (!isCollision) {
 			rotateMirror();
 		}
 	})
+
+	async function ResizeBeam(mirror)
+	{
+		let beam;
+		let children = await mirror.getChildren();
+		for (let i = 0; i < children.length; i++)
+		{
+			if (focusedBeams.includes(children[i]))
+				beam = children[i];
+		}
+		let mirrorTransform = mirror.getGlobalTransform();
+
+		// Vecteur initial pointant vers l'avant (par exemple, l'axe -Z)
+		const forwardVector = { x: 0, y: 0, z: -1 };
+
+		// Effectuer la rotation du vecteur en fonction du quaternion
+		const x = mirrorTransform.orientation[0],
+			y = mirrorTransform.orientation[1],
+			z = mirrorTransform.orientation[2],
+			w = mirrorTransform.orientation[3];
+
+		// Appliquer la rotation du quaternion à ce vecteur
+		const x2 = x + x;
+		const y2 = y + y;
+		const z2 = z + z;
+		const xx = x * x2;
+		const xy = x * y2;
+		const xz = x * z2;
+		const yy = y * y2;
+		const yz = y * z2;
+		const zz = z * z2;
+		const wx = w * x2;
+		const wy = w * y2;
+		const wz = w * z2;
+
+		const rotatedDirection = {
+			x: forwardVector.x * (1.0 - (yy + zz)) + forwardVector.y * (xy - wz) + forwardVector.z * (xz + wy),
+			y: forwardVector.x * (xy + wz) + forwardVector.y * (1.0 - (xx + zz)) + forwardVector.z * (yz - wx),
+			z: forwardVector.x * (xz - wy) + forwardVector.y * (yz + wx) + forwardVector.z * (1.0 - (xx + yy))
+		};
+
+		// Normaliser le vecteur résultant
+		const magnitude = Math.sqrt(rotatedDirection.x * rotatedDirection.x + rotatedDirection.y * rotatedDirection.y + rotatedDirection.z * rotatedDirection.z);
+		const directionVector = {
+			x: rotatedDirection.x / magnitude,
+			y: rotatedDirection.y / magnitude,
+			z: rotatedDirection.z / magnitude
+		};
+
+		const origin = [
+			mirrorTransform.position[0] + directionVector.x, // Multiplie par la distance souhaitée
+			mirrorTransform.position[1] + 1,
+			mirrorTransform.position[2] + directionVector.y
+		];
+
+		const rayLength = 100;
+		const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
+
+		// Effectuer le raycast
+		const { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, [directionVector.x, directionVector.y, directionVector.z], rayLength, filterFlags);
+		for (let i = 0; i < touches.length; i++)
+		{
+			if (mirrors.includes(touches[i].entity))
+				shootMirror(touches[i].entity);
+		}
+		let FinalTransform = mirrorTransform;
+		while (touches && touches.length > 1 && (focusedBeams.includes(touches[0].entity) || touches[0].entity == mirror || lights.includes(touches[0].entity)))
+			touches.shift();
+		if (touches && touches.length > 1) {
+			console.log(mirrorTransform.position);
+			console.log(touches[0]);
+			let distance = Math.sqrt(
+				Math.pow(mirrorTransform.position[0] - touches[0].position[0], 2) +
+				Math.pow(mirrorTransform.position[1] - touches[0].position[1], 2) +
+				Math.pow(mirrorTransform.position[2] - touches[0].position[2], 2)
+			);
+			console.log(distance);
+			FinalTransform.scale = [1, 1, distance];
+		} else {
+			// touches est undefined ou touches[0].position est undefined
+			FinalTransform.scale = [1, 1, 100]; // ou une autre valeur par défaut
+		}
+		FinalTransform.position[0] += directionVector.x / 8;
+		FinalTransform.position[1] += 1;
+		FinalTransform.position[2] += directionVector.z / 8;
+		beam.setGlobalTransform(FinalTransform);
+	}
+
+	async function shootMirror(mirror)
+	{
+		let index = mirrors.findIndex(element => element === mirror);
+		if (index != -1 && MirrorsShoot[index] == false)
+		{
+			MirrorsShoot[index] = true;
+			//let mirrorTransform = mirror.getComponent('local_transform');
+			let lightParentEntity = mirror;
+			let lightSceneEntity = await lightTemplate.instantiateTransientEntity(
+			"Light",
+			lightParentEntity,
+			true
+		);
+		let orientation = lightSceneEntity.getGlobalTransform().orientation;
+
+		lightSceneEntity.setGlobalTransform({orientation : orientation});
+		let position = lightSceneEntity.getGlobalTransform().position;
+		position[1] += 1;
+		lightSceneEntity.setGlobalTransform({position : position});
+		ResizeBeam(mirror);
+		focusedBeams.push(lightSceneEntity);
+		}
+	}
 
 	async function rotateMirror(){
 		const cameraTransform = camera.getTransform();
