@@ -20,9 +20,12 @@
 ---------------------------------------------------------------------------------------------
 */
 
-import {publicToken, mainSceneUUID, characterControllerSceneUUID, phantomMeshUUID} from "./config.js";
-
-
+import {
+	publicToken,
+	mainSceneUUID,
+	characterControllerSceneUUID,
+	phantomMeshUUID,
+} from "./config.js";
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -60,8 +63,6 @@ async function InitApp() {
 	// Démarrer la jeu
 	await Game();
 }
-
-
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -506,7 +507,7 @@ async function Game(){
 			let { block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags)
 			if (touches.length > 0)
 			{
-				let hitPoint = touches[touches.length - 1].position[1];
+				let hitPoint = touches[0].position[1];
 				return hitPoint + this.height;
 			}
 			return -1;
