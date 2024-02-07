@@ -1,6 +1,6 @@
-import { mainSceneUUID, characterControllerSceneUUID } from "../config";
+import { publicToken, mainSceneUUID, characterControllerSceneUUID } from "../config.js";
 
-async function InitApp() {
+export async function InitApp() {
 
 	// Session initialization
 	await SDK3DVerse.startSession({
@@ -22,5 +22,5 @@ async function InitApp() {
 	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
 
 	// Démarrer la jeu
-	await Game();
+	//await Game();
 }
