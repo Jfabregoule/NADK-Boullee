@@ -24,8 +24,6 @@ import {
 	publicToken,
 	mainSceneUUID,
 	characterControllerSceneUUID,
-	objectMeshUUID,
-	mirrorSceneUUID,
 	phantomMeshUUID,
 } from "./config.js";
 
@@ -121,7 +119,7 @@ async function InitFirstPersonController(charCtlSceneUUID) {
 	const children = await firstPersonController.getChildren();
 	const firstPersonCamera = children.find((child) =>
 		child.isAttached("camera")
-	);
+	);s
 
 	// We need to assign the current client to the first person controller
 	// script which is attached to the firstPersonController entity.
@@ -297,7 +295,7 @@ async function Game(){
 						let Playertransform = player.getGlobalTransform();
 						let lightTransform = zone.getGlobalTransform();
 						Playertransform.position[0] = lightTransform.position[0];
-						Playertransform.position[1] = camera.getTransform().position[1] - 2.5;
+						Playertransform.position[1] = camera.getTransform().position[1] + 2.5;
 						Playertransform.position[2] = lightTransform.position[2];
 						player.setGlobalTransform(Playertransform);
 					}
@@ -403,9 +401,9 @@ async function Game(){
 			];
 
 			const origin = [
-			cameraTransform.position[0] + directionVector[0], // Multiplie par la distance souhaitée
+			cameraTransform.position[0], // Multiplie par la distance souhaitée
 			cameraTransform.position[1] - 0.5,
-			cameraTransform.position[2] + directionVector[2]
+			cameraTransform.position[2]
 			];
 
 			const rayLength = 100;
@@ -422,22 +420,22 @@ async function Game(){
 			// Calcule de la taille du rayon
 			let FinalTransform = cameraTransform;
 			// Vérifie s'il y a des touches
-			while(touches && touches.length > 0 && (triggerBoxes.includes(touches[0].entity) || players.includes(touches[0].entity)))
+			while(touches && touches.length > 0 && (triggerBoxes.includes(touches[touches.length - 1].entity) || players.includes(touches[touches.length - 1].entity)))
 			{
-				touches.shift();
-			}
-			if (touches[0] && touches[0].entity && mirrors.includes(touches[0].entity))
+				touches.pop();
+			}	
+			if (touches[touches.length - 1] && touches[touches.length - 1].entity && mirrors.includes(touches[touches.length - 1].entity))
 			{
-				let id = mirrors.findIndex(element => element === touches[0].entity);
+				let id = mirrors.findIndex(element => element === touches[touches.length - 1].entity);
 				if (MirrorsShoot[id] == false)
-					await shootMirror(touches[0].entity);
-				touches.shift();
+					await shootMirror(touches[touches.length - 1].entity);
+				touches.pop();
 			}
-			if (touches && touches.length > 0 && touches[0] && touches[0].position) {
+			if (touches && touches.length > 0 && touches[touches.length - 1] && touches[touches.length - 1].position) {
 				let distance = Math.sqrt(
-					Math.pow(cameraTransform.position[0] - touches[0].position[0], 2) +
-					Math.pow(cameraTransform.position[1] - touches[0].position[1], 2) +
-					Math.pow(cameraTransform.position[2] - touches[0].position[2], 2)
+					Math.pow(cameraTransform.position[0] - touches[touches.length - 1].position[0], 2) +
+					Math.pow(cameraTransform.position[1] - touches[touches.length - 1].position[1], 2) +
+					Math.pow(cameraTransform.position[2] - touches[touches.length - 1].position[2], 2)
 				);
 				FinalTransform.scale = [1, 1, distance];
 			} else {
