@@ -24,8 +24,6 @@ import {
 	publicToken,
 	mainSceneUUID,
 	characterControllerSceneUUID,
-	objectMeshUUID,
-	mirrorSceneUUID,
 	phantomMeshUUID,
 } from "./config.js";
 
@@ -39,27 +37,30 @@ import {
 
 window.addEventListener("load", InitApp);
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------//
+
 async function InitApp() {
+
+	// Session initialization
 	await SDK3DVerse.startSession({
 		userToken: publicToken,
 		sceneUUID: mainSceneUUID,
 		canvas: document.getElementById("display-canvas"),
 		connectToEditor: true,
 		startSimulation: "on-assets-loaded",
-
 	});
+
+	// Simulation initialization
 	await SDK3DVerse.engineAPI.startSimulation();
+
+	// First person controller initialization
 	await InitFirstPersonController(characterControllerSceneUUID);
 
-	//await InitObject(objectMeshUUID);
-	//await InitMirror(mirrorSceneUUID);
-	//await InitEnemy(phantomMeshUUID);
-
-	// init console log for C++
+	// Init console log for C++
 	const engineOutputEventUUID = "9d62edc3-d096-40fd-ba7d-60550c050cf1";
 	SDK3DVerse.engineAPI.registerToEvent(engineOutputEventUUID, "log", (event) => console.log(event.dataObject.output));
-	// Démarrer la musique
+
+	// Démarrer la jeu
 	await Game();
 }
 
@@ -72,102 +73,70 @@ async function InitApp() {
 */
 
 async function setFPSCameraController(canvas){
-	// Remove the required click for the LOOK_LEFT, LOOK_RIGHT, LOOK_UP, and
-	// LOOK_DOWN actions.
+
+	// Remove the required click for the LOOK_LEFT, LOOK_RIGHT, LOOK_UP, and LOOK_DOWN actions.
 	SDK3DVerse.actionMap.values["LOOK_LEFT"][0] = ["MOUSE_AXIS_X_POS"];
 	SDK3DVerse.actionMap.values["LOOK_RIGHT"][0] = ["MOUSE_AXIS_X_NEG"];
 	SDK3DVerse.actionMap.values["LOOK_DOWN"][0] = ["MOUSE_AXIS_Y_NEG"];
 	SDK3DVerse.actionMap.values["LOOK_UP"][0] = ["MOUSE_AXIS_Y_POS"];
 	SDK3DVerse.actionMap.propagate();
 
-	// Lock the mouse pointer.
+	// Lock the mouse pointer
 	canvas.requestPointerLock = (
-	  canvas.requestPointerLock
-	  || canvas.mozRequestPointerLock
-	  || canvas.webkitPointerLockElement
+	  	canvas.requestPointerLock
+	  	|| canvas.mozRequestPointerLock
+	  	|| canvas.webkitPointerLockElement
 	);
 	canvas.requestPointerLock();
 };
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------//
+
 async function InitFirstPersonController(charCtlSceneUUID) {
-	// To spawn an entity we need to create an EntityTempllate and specify the
-	// components we want to attach to it. In this case we only want a scene_ref
-	// that points to the character controller scene.
+
+	// Player Template Initialization
 	const playerTemplate = new SDK3DVerse.EntityTemplate();+
 	playerTemplate.attachComponent("scene_ref", { value: charCtlSceneUUID });
 
-	// Passing null as parent entity will instantiate our new entity at the root
-	// of the main scene.
+	// Init at the root of the main scene
 	const parentEntity = null;
-	// Setting this option to true will ensure that our entity will be destroyed
-	// when the client is disconnected from the session, making sure we don't
-	// leave our 'dead' player body behind.
+
+	// Delete entity when app is closed
 	const deleteOnClientDisconnection = true;
-	// We don't want the player to be saved forever in the scene, so we
-	// instantiate a transient entity.
-	// Note that an entity template can be instantiated multiple times.
-	// Each instantiation results in a new entity.
+
+	// Initialisation of a transient entity for the player
 	const playerSceneEntity = await playerTemplate.instantiateTransientEntity(
 		"Player",
 		parentEntity,
 		deleteOnClientDisconnection
 	);
 
-	// The character controller scene is setup as having a single entity at its
-	// root which is the first person controller itself.
+	// Character controller setup
 	const firstPersonController = (await playerSceneEntity.getChildren())[0];
-	// Look for the first person camera in the children of the controller.
+	
+	// Camera setup
 	const children = await firstPersonController.getChildren();
 	const firstPersonCamera = children.find((child) =>
 		child.isAttached("camera")
 	);
 
-	// We need to assign the current client to the first person controller
-	// script which is attached to the firstPersonController entity.
-	// This allows the script to know which client inputs it should read.
+	// Assign client to controller
 	SDK3DVerse.engineAPI.assignClientToScripts(firstPersonController);
 
-	// Finally set the first person camera as the main camera.
+	// Main camera setup
 	SDK3DVerse.setMainCamera(firstPersonCamera);
 
+	// Toggle first person
 	document.addEventListener('mousedown', (event) => {
-	setFPSCameraController(document.getElementById("display-canvas"));
+		setFPSCameraController(document.getElementById("display-canvas"));
 	});
+
+	// Background music setup
 	document.addEventListener('mousedown', () => {
 		const backgroundMusic = document.getElementById("backgroundMusic");
 		backgroundMusic.volume = 0.1;
 		backgroundMusic.play();
 	});
-}
-
-/*
----------------------------------------------------------------------------------------------
-|																							|
-|										Init Object											|
-|																							|
----------------------------------------------------------------------------------------------
-*/
-
-async function InitObject(object){
-
-	const objectTemplate = new SDK3DVerse.EntityTemplate();
-	objectTemplate.attachComponent('mesh_ref', { value : object });
-	objectTemplate.attachComponent('material_ref', { value : "cf7f45ff-014b-4c2c-90fa-1deb01a2a4bb" });
-
-	objectTemplate.attachComponent('physics_material');
-	objectTemplate.attachComponent('rigid_body',{mass : 1,centerOfMass :[0.5,0.5,0.5]});
-	objectTemplate.attachComponent('box_geometry',{dimension:[1,1,1],offset:[0.5,0.5,0.5]});
-
-	const parentEntity = null;
-	const deleteOnClientDisconnection = true;
-
-	const objectEntity = await objectTemplate.instantiateTransientEntity(
-		"object",
-		parentEntity,
-		deleteOnClientDisconnection
-	);
-	//SDK3DVerse.engineAPI.assignClientToScripts(objectEntity);
 }
 
 /*
@@ -186,13 +155,13 @@ async function InitObject(object){
 
 async function Game(){
 
-/*
----------------------------------------------------------------------------------------------
-|																							|
-|											Inits											|
-|																							|
----------------------------------------------------------------------------------------------
-*/
+	/*
+	---------------------------------------------------------------------------------------------
+	|																							|
+	|											Inits											|
+	|																							|
+	---------------------------------------------------------------------------------------------
+	*/
 
 	let hasSeenCinematic = false;
 	let isShooting;
@@ -209,7 +178,6 @@ async function Game(){
 	lightTemplate.attachComponent("scene_ref", { value: '5cbfd358-45d9-4442-b4bf-dd1b4db5776f' });
 	lightTemplate.attachComponent('local_transform', { position : [0, 0, 0] });
 
-	//const lights = await SDK3DVerse.engineAPI.findEntitiesByEUID('558bc544-e587-4582-8835-738687d960b2');
 	let lights = [];
 
 	isShooting = false;
@@ -252,6 +220,7 @@ async function Game(){
 	let codeTry = []
 	let lastBtn  = null
 
+	// Init tags (filters)
 	async function GetTags()
 	{
 		const componentFilter = { mandatoryComponents : ['tags']};
@@ -460,7 +429,7 @@ async function Game(){
 	class Enemy {
 
 		// Construction and Initialization of the enemy entity
-		constructor(initialPos, enemyUUID, materialRefValue, maxHP, speed, height) {
+		constructor(initialPos, enemyUUID, materialRefValue, maxHP, speed, height, collisionDistance, playerCollisionDistance) {
 			this.detect = true;
 			this.position = initialPos;
 			this.initialPos = initialPos;
@@ -473,6 +442,8 @@ async function Game(){
 			this.HP = maxHP;
 			this.direction = 0;
 			this.directionVector = [0, 0, 1];
+			this.collisionDistance = collisionDistance;
+			this.playerCollisionDistance = playerCollisionDistance;
 		}
 
 		// Deletes enemy
@@ -563,7 +534,7 @@ async function Game(){
 		// Checks collision with raycast in the Direction Vector direction
 		async checkWanderCollision() {
 
-			const rayLength = 1;
+			const rayLength = this.collisionDistance;
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(this.position, this.directionVector, rayLength, filterFlags);
@@ -631,12 +602,11 @@ async function Game(){
 			]
 
 			this.directionVector = directionVector;
-			console.log(magnitude)
 			const rayLength = magnitude;
 			const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
 
 			const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(this.position, this.directionVector, rayLength, filterFlags);
-			if (magnitude < 1 || touches.length > 0) {
+			if (magnitude < this.playerCollisionDistance || touches.length > 0) {
 				return true
 			}
 			else
@@ -649,7 +619,7 @@ async function Game(){
 		async followLogic() {
 
 			let isCollision = await this.getFollowDirection();
-if (!isCollision) {
+			if (!isCollision) {
 				const height = await this.adjustHeight();
 
 				let directionX = this.directionVector[0];
@@ -668,18 +638,20 @@ if (!isCollision) {
 					this.position[2] + this.directionVector[2] / distanceRatio * this.speed  // Z
 				)
 			}
-			this.orientEnemy();
-			/*
+			else {
 
-			const isCollision = await this.checkCollision();
-			if (isCollision && this.detect) {
-				this.detect = false;
+
+				// KILL PLAYER HERE
+
+
 			}
-			*/
+			this.orientEnemy();
 		}
 	}
 
-	const enemy1 = new Enemy([2, -4, 3], phantomMeshUUID, "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484", 1, 3 / 60, 1);
+	const camerapagnan = camera.getTransform();
+	const playapagnan = camerapagnan.position;
+	const enemy1 = new Enemy([playapagnan[0], playapagnan[1], playapagnan[2]], phantomMeshUUID, "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484", 1, 3 / 60, 1, 10, 0.5);
 	enemy1.initializeEnemy().then(() => {
 		function boucle() {
 			if (isBehavior) {
@@ -696,7 +668,7 @@ if (!isCollision) {
 	})
 
 	function changeBehavior(event) {
-		if (event.key === 'p') {
+		if (event.key === 'p' || event.key === 'P') {
 			isBehavior = !isBehavior;
 		}
 	}
@@ -856,7 +828,9 @@ if (!isCollision) {
 */
 	let angle = 0;
 	let rad = 0;
-	function degToRad(deg){ return deg * Math.PI/180}
+	function degToRad(deg){ 
+		return deg * Math.PI/180
+	}
 
 	document.addEventListener('keyup',(event)=>{
 		if(event.key == 'r'){
@@ -879,24 +853,24 @@ if (!isCollision) {
 		const forwardVector = { x: 0, y: 0, z: -1 };
 
 		// Effectuer la rotation du vecteur en fonction du quaternion
-		const x = mirrorTransform.orientation[0],
-			y = mirrorTransform.orientation[1],
-			z = mirrorTransform.orientation[2],
-			w = mirrorTransform.orientation[3];
+		const 	x = mirrorTransform.orientation[0],
+				y = mirrorTransform.orientation[1],
+				z = mirrorTransform.orientation[2],
+				w = mirrorTransform.orientation[3];
 
 		// Appliquer la rotation du quaternion à ce vecteur
-		const x2 = x + x;
-		const y2 = y + y;
-		const z2 = z + z;
-		const xx = x * x2;
-		const xy = x * y2;
-		const xz = x * z2;
-		const yy = y * y2;
-		const yz = y * z2;
-		const zz = z * z2;
-		const wx = w * x2;
-		const wy = w * y2;
-		const wz = w * z2;
+		const 	x2 = x + x,
+				y2 = y + y,
+		 		z2 = z + z,
+		 		xx = x * x2,
+		 		xy = x * y2,
+		 		xz = x * z2,
+		 		yy = y * y2,
+		 		yz = y * z2,
+		 		zz = z * z2,
+		 		wx = w * x2,
+		 		wy = w * y2,
+		 		wz = w * z2;
 
 		const rotatedDirection = {
 			x: forwardVector.x * (1.0 - (yy + zz)) + forwardVector.y * (xy - wz) + forwardVector.z * (xz + wy),
