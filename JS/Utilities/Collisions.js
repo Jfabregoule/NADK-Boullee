@@ -3,7 +3,7 @@ import { destroyfocusedbeam } from "../FocusedBeam/Destroy.js";
 import { PlayCinematic } from "../oui/Cinematic.js";
 import { WallEnigma } from "../Enigma/WallEnigma.js";
 
-export async function checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable){
+export async function checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors){
 
     SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) => 
     {
@@ -30,7 +30,7 @@ export async function checkColls(lights, actionQueue, player, firstPersonControl
             PlayCinematic();
             hasSeenCinematic = true;
         }
-        WallEnigma(entering, zone, enigmaDetectors, enigmaEntities, wallOne, wallTwo);
+        WallEnigma(entering, zone, enigmaDetectors, enigmaEntities, wallOne, wallTwo, colors);
     });
 
     SDK3DVerse.engineAPI.onExitTrigger((exiting, zone) =>

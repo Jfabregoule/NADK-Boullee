@@ -1,6 +1,6 @@
-export async function InitEnigma(enigmaDetectors, enigmaEntities){
-    enigmaDetectors = [];
-    enigmaEntities = [];
+export async function InitEnigma(){
+    let enigmaDetectors = [];
+    let enigmaEntities = [];
     let detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('wallDetector'));
     enigmaDetectors.push(...detector);
     detector = (await SDK3DVerse.engineAPI.findEntitiesByNames('redDetector'));
@@ -18,4 +18,6 @@ export async function InitEnigma(enigmaDetectors, enigmaEntities){
     enigmaEntities.push(...item);
     item = (await SDK3DVerse.engineAPI.findEntitiesByNames('lightCube'));
     enigmaEntities.push(...item);
+
+    return [enigmaDetectors, enigmaEntities]; 
 }

@@ -131,14 +131,38 @@ async function Game(){
 
 	let tagged = [];
 
-	let enigmaDetectors = [];
-	let enigmaEntities = [];
 	const wallOne = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall'))[0];
 	const wallTwo = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall2'))[0];
 	const codeInteract = (await SDK3DVerse.engineAPI.findEntitiesByNames('codeInteract'))[0]
-	let red = false;
-	let purple = false;
-	let light = false;
+
+	class Colors {
+
+		constructor() {
+			this.red = false;
+			this.purple = false;
+			this.light = false;
+		}
+
+		toggleRed() {
+			this.red = !this.red;
+		}
+
+		togglePurple() {
+			this.purple = !this.purple;
+		}
+
+		toggleLight() {
+			this.light = !this.light;
+		}
+
+		allTrue() {
+			if(this.red && this.purple && this.light) {
+				return true;
+			}
+			return false;
+		}
+	}
+	const colors = new Colors;
 	let code = ['1','2','3'];
 	let codeTry = []
 	let lastBtn  = null
@@ -161,9 +185,9 @@ async function Game(){
 |																							|
 ---------------------------------------------------------------------------------------------
 */
+	let [enigmaDetectors, enigmaEntities] = await InitEnigma();
 
-
-	await checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable);
+	await checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors);
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -435,12 +459,12 @@ async function Game(){
 */
 
 
-	InitEnigma(enigmaDetectors, enigmaEntities)
+	
 
 
 
 	document.addEventListener('keyup',async (event)=>{
-		if(event.key == 'f'){
+		if(event.key == 'f' || event.key == 'F'){
 			[code, codeTry, lastBtn] = await ButtonEnigma(code, codeTry, camera, lastBtn);
 		}
 	})
