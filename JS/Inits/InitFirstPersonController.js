@@ -33,11 +33,6 @@ export async function InitFirstPersonController(charCtlSceneUUID) {
 
 	// Main camera setup
 	SDK3DVerse.setMainCamera(firstPersonCamera);
-	
-	// Toggle first person
-	document.addEventListener('mousedown', (event) => {
-		setFPSCameraController(document.getElementById("display-canvas"));
-	});
 
 	// Background music setup
 	document.addEventListener('mousedown', () => {
