@@ -1,4 +1,4 @@
-export async function ButtonEnigma(code, codeTry, camera, lastBtn){
+export async function ButtonEnigma(code, codeTry, camera, lastBtn, codeInteract){
     if (JSON.stringify(code) != JSON.stringify(codeTry)){
         const cameraTransform = camera.getTransform();
 
@@ -19,17 +19,17 @@ export async function ButtonEnigma(code, codeTry, camera, lastBtn){
         ];
 
         const origin = [
-        cameraTransform.position[0] + directionVector[0], // Multiplie par la distance souhaitée
-        cameraTransform.position[1] + directionVector[1],
-        cameraTransform.position[2] + directionVector[2]
+            cameraTransform.position[0] + directionVector[0], // Multiplie par la distance souhaitée
+            cameraTransform.position[1] + directionVector[1],
+            cameraTransform.position[2] + directionVector[2]
         ];
 
         const rayLength = 1;
         const filterFlags = SDK3DVerse.PhysicsQueryFilterFlag.dynamic_block | SDK3DVerse.PhysicsQueryFilterFlag.record_touches;
-        // Returns dynamic body (if the ray hit one) in block, and all static bodies encountered along the way in touches
         const{ block, touches } = await SDK3DVerse.engineAPI.physicsRaycast(origin, directionVector, rayLength, filterFlags);
         if (block != null )
         {
+        console.log(block);
             if (block.entity.getComponent('tags')){
                 if (block.entity.getComponent('tags').value[0] == 'button'){
                     if (lastBtn != null){
@@ -56,5 +56,5 @@ export async function ButtonEnigma(code, codeTry, camera, lastBtn){
         codeTry = [];
         codeInteract.setComponent('material_ref',{value : "5629a0e5-e272-4be1-82e1-c8d6cef9ae76"});
     }
-    return [code, codeTry, lastBtn];
+    return [codeTry, lastBtn];
 }

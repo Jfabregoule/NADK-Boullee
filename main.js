@@ -55,7 +55,7 @@ window.addEventListener("load", (event) => {
 		menu.style.display = "block";
 
 		// Gestionnaire d'événements pour le bouton "Start"
-		menu.addEventListener("mouseup", () => {
+		startButton.addEventListener("mouseup", () => {
 
 			// Lock mouse on screen
 			setFPSCameraController(document.getElementById("display-canvas"));
@@ -68,33 +68,10 @@ window.addEventListener("load", (event) => {
 
 			// Start the Game
 			Game();
-			
+
 		});
 	});
 });
-
-  /*
-  
-  window.addEventListener("load", (event) => {
-	  InitApp().then(() => {
-		  Game()
-	  })
-  });
-  */
-
-/*
----------------------------------------------------------------------------------------------
-|																							|
-|									Init Character											|
-|																							|
----------------------------------------------------------------------------------------------
-*/
-
-
-
-//------------------------------------------------------------------------------//
-
-
 
 /*
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -102,7 +79,7 @@ window.addEventListener("load", (event) => {
 |																																						|
 |							---------------------------------------------------------------------------------------------								|
 |							|																							|								|
-|							|										Functions											|								|
+|							|										  Game   											|								|
 |							|																							|								|
 |							---------------------------------------------------------------------------------------------								|
 |																																						|
@@ -499,7 +476,7 @@ async function Game(){
 
 	document.addEventListener('keyup',async (event)=>{
 		if(event.key == 'f' || event.key == 'F'){
-			[code, codeTry, lastBtn] = await ButtonEnigma(code, codeTry, camera, lastBtn);
+			[codeTry, lastBtn] = await ButtonEnigma(code, codeTry, camera, lastBtn, codeInteract);
 		}
 	})
 

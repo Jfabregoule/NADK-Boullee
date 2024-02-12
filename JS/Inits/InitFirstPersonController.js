@@ -1,5 +1,3 @@
-import { setFPSCameraController } from "../Utilities/LockScreen.js";
-
 export async function InitFirstPersonController(charCtlSceneUUID) {
 
 	// Player Template Initialization
