@@ -1,4 +1,4 @@
-export async function createfocusedbeam(player){
+export async function createfocusedbeam(player, lightTemplate, focusedBeams){
 
     const children = await player.getChildren();
 
@@ -12,6 +12,5 @@ export async function createfocusedbeam(player){
         true
     );
     focusedBeams.push(lightSceneEntity);
-    isShooting = true;
-    return isShooting;
+    return true;
 }

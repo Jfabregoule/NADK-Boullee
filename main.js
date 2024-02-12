@@ -1,18 +1,4 @@
 /*
-//-------------------------------------------------------------------------------------------------------------------------------------------------------
-|																																						|
-|																																						|
-|							---------------------------------------------------------------------------------------------								|
-|							|																							|								|
-|							|											Setup											|								|
-|							|																							|								|
-|							---------------------------------------------------------------------------------------------								|
-|																																						|
-|																																						|
-//-------------------------------------------------------------------------------------------------------------------------------------------------------
-*/
-
-/*
 ---------------------------------------------------------------------------------------------
 |																							|
 |										Imports												|
@@ -41,6 +27,7 @@ import { InitEnigma } from "./JS/Inits/InitEnigma.js";
 |																							|
 ---------------------------------------------------------------------------------------------
 */
+
 window.addEventListener("load", (event) => {
 
 	// Initialise et lance le jeu
@@ -198,7 +185,7 @@ async function Game(){
 	*/
 	let [enigmaDetectors, enigmaEntities] = await InitEnigma();
 
-	await checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors);
+	isShooting = await checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate);
 
 	/*
 	---------------------------------------------------------------------------------------------
@@ -498,7 +485,7 @@ async function Game(){
 
 	function loop() {
 		setFPSCameraController(document.getElementById("display-canvas"));
-		movefocusedbeam(player, isShooting);
+		movefocusedbeam(player, isShooting, camera, triggerBoxes, players, mirrors);
 		if (isGrabbing)
 			moveGrabbed(grabbedEntity, camera);
 		window.requestAnimationFrame(loop);

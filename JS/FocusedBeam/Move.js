@@ -1,4 +1,4 @@
-export async function movefocusedbeam(player, isShooting) {
+export async function movefocusedbeam(player, isShooting, camera, triggerBoxes, players, mirrors) {
 
     const children = await player.getChildren();
 

@@ -3,14 +3,15 @@ import { destroyfocusedbeam } from "../FocusedBeam/Destroy.js";
 import { PlayCinematic } from "../oui/Cinematic.js";
 import { WallEnigma } from "../Enigma/WallEnigma.js";
 
-export async function checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors){
+export async function checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate){
 
+    let isShooting;
     SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) => 
     {
         if (entering == firstPersonController && lights.includes(zone))
         {
             actionQueue.push(() => {
-                isShooting = createfocusedbeam(player);
+                isShooting = createfocusedbeam(player, lightTemplate, focusedBeams);
             });
             console.log(zone.getComponent('tags').value[1]);
             if (zone.getComponent('tags').value[1] == "elevate")
@@ -40,6 +41,10 @@ export async function checkColls(lights, actionQueue, player, firstPersonControl
             exiting.setGlobalTransform({position : [0, 0, 0]});
         }
         if (exiting == firstPersonController && lights.includes(zone))
-            actionQueue.push(() => destroyfocusedbeam(perso));
+            actionQueue.push(() => {
+                isShooting = destroyfocusedbeam(player, focusedBeams)
+            }
+        )
     });
+    return isShooting;
 }
