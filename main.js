@@ -8,7 +8,7 @@
 
 import { phantomMeshUUID } from "./config.js";
 import { InitApp } from "./JS/Inits/InitApp.js";
-import { Enemy } from "./JS/oui/Enemies.js";
+import { Enemy } from "./JS/Enemies/Enemies.js";
 import { InitGrabbable } from "./JS/Inits/InitGrabbable.js";
 import { movefocusedbeam } from "./JS/FocusedBeam/Move.js";
 import { setFPSCameraController } from "./JS/Utilities/LockScreen.js";
@@ -17,7 +17,7 @@ import { checkColls } from "./JS/Utilities/Collisions.js";
 import { Interact } from "./JS/Grab/Interact.js";
 import { Grab } from "./JS/Grab/Grab.js";
 import { moveGrabbed } from "./JS/Grab/Move.js";
-import { ButtonEnigma } from "./JS/Enigma/ButtonEnigma.js";
+import { ButtonEnigma } from "./JS/Enigmas/ButtonEnigma.js";
 import { InitEnigma } from "./JS/Inits/InitEnigma.js";
 
 /*
@@ -165,36 +165,15 @@ async function Game(){
 	let codeTry = []
 	let lastBtn  = null
 
-	/*
-	---------------------------------------------------------------------------------------------
-	|																							|
-	|										Tags												|
-	|																							|
-	---------------------------------------------------------------------------------------------
-	*/
-
+	// Tags
 	await GetTags(tagged, mirrors, buttons, lights, MirrorsShoot, triggerBoxes);
 
 
-	/*
-	---------------------------------------------------------------------------------------------
-	|																							|
-	|										Collisions											|
-	|																							|
-	---------------------------------------------------------------------------------------------
-	*/
+	// Collision
 	let [enigmaDetectors, enigmaEntities] = await InitEnigma();
-
 	isShooting = await checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate);
 
-	/*
-	---------------------------------------------------------------------------------------------
-	|																							|
-	|										Beam												|
-	|																							|
-	---------------------------------------------------------------------------------------------
-	*/
-
+	// Beam
 	window.requestAnimationFrame(actionQueueLoop);
 	async function actionQueueLoop() {
 	if(!actionQueue.length) {
@@ -206,17 +185,8 @@ async function Game(){
 	await action();
 	window.requestAnimationFrame(actionQueueLoop);
 	}
-
-	/*
-	---------------------------------------------------------------------------------------------
-	|																							|
-	|										Enemy												|
-	|																							|
-	---------------------------------------------------------------------------------------------
-	*/
-
 	
-
+	// Enemy
 	const camerapagnan = camera.getTransform();
 	const playapagnan = camerapagnan.position;
 	const enemy1 = new Enemy([playapagnan[0], playapagnan[1], playapagnan[2]], phantomMeshUUID, "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484", 1, 3 / 60, 1, 10, 1);
@@ -241,17 +211,8 @@ async function Game(){
 	}
 	document.addEventListener('keypress', changeBehavior);
 
-
-	/*
-	---------------------------------------------------------------------------------------------
-	|																							|
-	|										Grab												|
-	|																							|
-	---------------------------------------------------------------------------------------------
-	*/
-
+	// Grab
 	await InitGrabbable(grabbable);
-
 	document.addEventListener('keyup', async (event)=>{
 		if(event.key == 'f'){
 			[isGrabbing, grabbedEntity] = await Grab(grabbedEntity, isGrabbing, camera, grabbable);
@@ -259,20 +220,7 @@ async function Game(){
 		}
 	})
 
-
-
-
-
-
-
-
-	/*
-	---------------------------------------------------------------------------------------------
-	|                                                                                            |
-	|                                        Mirror                                              |
-	|                                                                                            |
-	---------------------------------------------------------------------------------------------
-	*/
+	// Mirrors
 	let angle = 0;
 	let rad = 0;
 	function degToRad(deg){ 
@@ -440,27 +388,8 @@ async function Game(){
 		}
 	}
 
-	/*
-	---------------------------------------------------------------------------------------------
-	|																							|
-	|									Cinematic												|
-	|																							|
-	---------------------------------------------------------------------------------------------
-	*/
-
-	/*
-	---------------------------------------------------------------------------------------------
-	|																							|
-	|										Enigma												|
-	|																							|
-	---------------------------------------------------------------------------------------------
-	*/
-
-
 	
-
-
-
+	// Enigma
 	document.addEventListener('keyup',async (event)=>{
 		if(event.key == 'f' || event.key == 'F'){
 			[codeTry, lastBtn] = await ButtonEnigma(code, codeTry, camera, lastBtn, codeInteract);

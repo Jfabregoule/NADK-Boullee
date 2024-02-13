@@ -1,7 +1,7 @@
 import { createfocusedbeam } from "../FocusedBeam/Create.js";
 import { destroyfocusedbeam } from "../FocusedBeam/Destroy.js";
-import { PlayCinematic } from "../oui/Cinematic.js";
-import { WallEnigma } from "../Enigma/WallEnigma.js";
+import { PlayCinematic } from "../Cinematic/Cinematic.js";
+import { WallEnigma } from "../Enigmas/WallEnigma.js";
 
 export async function checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate){
 

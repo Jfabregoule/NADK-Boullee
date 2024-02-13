@@ -13,6 +13,7 @@ export async function GetTags(tagged, mirrors, buttons, lights, mirrorsShoot, tr
             buttons.push(tagged[i]);
         else if (tagged[i].getComponent('tags').value[0] == 'light')
         {
+            console.log(lights.length);
             lights.push(tagged[i]);
             triggerBoxes.push(tagged[i]);
         }
