@@ -97,10 +97,15 @@ async function Game(){
 
 	let firstPersonControllers = await SDK3DVerse.engineAPI.findEntitiesByNames('First Person Controller');
 	let firstPersonController = firstPersonControllers[0];
-	console.log("First person controller: ");
-	console.log(firstPersonController);
-	const camera = firstPersonController.getComponent('camera');
+
+	// Switch back to FPS cam
+
+	
+	const components = await firstPersonController.getChildren();
+	const camera = components[0];
 	SDK3DVerse.setMainCamera(camera);
+	console.log("CAMERA : ");
+	console.log(camera);
 
 	//console.log("camera"+ camera);
 	// Lancer la cinématique
