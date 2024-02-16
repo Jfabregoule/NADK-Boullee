@@ -42,7 +42,7 @@ window.addEventListener("load", (event) => {
 		// Display Menu
 		menu.style.display = "block";
 
-		PlayCinematic();
+		//PlayCinematic();
 
 		// Gestionnaire d'événements pour le bouton "Start"
 		startButton.addEventListener("mouseup", () => {
@@ -101,8 +101,9 @@ async function Game(){
 	let firstPersonController = firstPersonControllers[0];
 	const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
 
+	//console.log("camera"+ camera);
 	// Lancer la cinématique
-	//PlayCinematic(camera);
+	PlayCinematic(camera);
 
 	const lightTemplate = new SDK3DVerse.EntityTemplate();
 	lightTemplate.attachComponent("scene_ref", { value: '5cbfd358-45d9-4442-b4bf-dd1b4db5776f' });
