@@ -19,6 +19,7 @@ import { Grab } from "./JS/Grab/Grab.js";
 import { moveGrabbed } from "./JS/Grab/Move.js";
 import { ButtonEnigma } from "./JS/Enigmas/ButtonEnigma.js";
 import { InitEnigma } from "./JS/Inits/InitEnigma.js";
+import { PlayCinematic, StopCinematic } from "./JS/Cinematic/Cinematic.js";
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -41,6 +42,8 @@ window.addEventListener("load", (event) => {
 		// Display Menu
 		menu.style.display = "block";
 
+		PlayCinematic();
+
 		// Gestionnaire d'événements pour le bouton "Start"
 		startButton.addEventListener("mouseup", () => {
 
@@ -52,6 +55,9 @@ window.addEventListener("load", (event) => {
 
 			// Affiche le canvas
 			canvasContainer.style.display = "block";
+
+			//
+			StopCinematic();
 
 			// Start the Game
 			Game();
@@ -94,6 +100,9 @@ async function Game(){
 	let firstPersonControllers = await SDK3DVerse.engineAPI.findEntitiesByNames('First Person Controller');
 	let firstPersonController = firstPersonControllers[0];
 	const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
+
+	// Lancer la cinématique
+	//PlayCinematic(camera);
 
 	const lightTemplate = new SDK3DVerse.EntityTemplate();
 	lightTemplate.attachComponent("scene_ref", { value: '5cbfd358-45d9-4442-b4bf-dd1b4db5776f' });
