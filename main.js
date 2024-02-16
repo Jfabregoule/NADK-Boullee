@@ -39,11 +39,6 @@ window.addEventListener("load", (event) => {
 		const startButton = document.getElementById("startButton");
 		const canvasContainer = document.getElementById("display-canvas");
 
-		
-
-		//store camera transform to reset it later
-		const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
-		let resetCamTransform = camera.getTransform();
 		PlayCinematic();
 
 		// Display Menu
@@ -62,8 +57,7 @@ window.addEventListener("load", (event) => {
 			canvasContainer.style.display = "block";
 
 			//
-			StopCinematic(resetCamTransform);
-
+			StopCinematic();
 			// Start the Game
 			Game();
 		});
@@ -103,7 +97,10 @@ async function Game(){
 
 	let firstPersonControllers = await SDK3DVerse.engineAPI.findEntitiesByNames('First Person Controller');
 	let firstPersonController = firstPersonControllers[0];
-	const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
+	console.log("First person controller: ");
+	console.log(firstPersonController);
+	const camera = firstPersonController.getComponent('camera');
+	SDK3DVerse.setMainCamera(camera);
 
 	//console.log("camera"+ camera);
 	// Lancer la cinématique
@@ -201,7 +198,7 @@ async function Game(){
 	}
 	
 	// Enemy
-	const camerapagnan = camera.getTransform();
+	const camerapagnan = firstPersonController.getTransform();
 	const playapagnan = camerapagnan.position;
 	const enemy1 = new Enemy([playapagnan[0], playapagnan[1], playapagnan[2]], phantomMeshUUID, "bb8c7a41-ddfc-4a54-af44-a3f71f3cb484", 1, 3 / 60, 1, 10, 1);
 	enemy1.initializeEnemy().then(() => {

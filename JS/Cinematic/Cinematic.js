@@ -10,21 +10,25 @@ export async function PlayCinematic(){
     //const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
 
     //let transform = camera.getTransform();
-    const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
-    await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [200, 200, 200], camera.getTransform().orientation, 10, camera.getTransform().position, camera.getTransform().orientation);
+    //const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
+    const cameraList = await SDK3DVerse.engineAPI.findEntitiesByNames("IntroCamera");
+    const camera = cameraList[0];
+    console.log(camera);
+	SDK3DVerse.setMainCamera(camera);
+    
+    await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [200, 200, 200], camera.getGlobalTransform().orientation, 20, camera.getGlobalTransform().position, camera.getGlobalTransform().orientation);
 
     //let transform = { position : [100, 100, 100], orientation : [0, 0, 0, 1], scale : [1, 1, 1] }
     //camera.setTransform(transform);
-    return true;
 }
 
-export async function StopCinematic(resetTransform){
+export async function StopCinematic(){
     // set cam to fpscam
     //await SDK3DVerse.engineAPI.cameraAPI.setViewports([firstPersonCamera]);
 
     // let transform = camera.getTransform();
     // await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [-3.007635, 5.210598, 68.501045], camera.getTransform().orientation, 1, camera.getTransform().position, camera.getTransform().orientation);
     await SDK3DVerse.engineAPI.cameraAPI.stopTravel();
-    const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
-    camera.setTransform(resetTransform);
+    //const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
+    //camera.setTransform(resetTransform);
 }
