@@ -43,7 +43,7 @@ window.addEventListener("load", (event) => {
 		
 		// Display Menu
 		menu.style.display = "block";
-		setFPSCameraController(document.getElementById("display-canvas"));
+		//setFPSCameraController(document.getElementById("display-canvas"));
 		// Gestionnaire d'événements pour le bouton "Start"
 		startButton.addEventListener("mouseup", () => {
 
