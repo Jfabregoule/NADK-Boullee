@@ -3,11 +3,14 @@ import { destroyfocusedbeam } from "../FocusedBeam/Destroy.js";
 import { PlayCinematic } from "../Cinematic/Cinematic.js";
 import { WallEnigma } from "../Enigmas/WallEnigma.js";
 
-export async function checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate){
+export async function checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger,TeleporterIn,TeleporterOut, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate){
 
     let isShooting;
     SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) => 
     {
+        if (entering == firstPersonController && TeleporterIn.includes(zone)){
+            
+        }
         if (entering == firstPersonController && lights.includes(zone))
         {
             actionQueue.push(() => {

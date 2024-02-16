@@ -20,6 +20,7 @@ import { moveGrabbed } from "./JS/Grab/Move.js";
 import { ButtonEnigma } from "./JS/Enigmas/ButtonEnigma.js";
 import { InitEnigma } from "./JS/Inits/InitEnigma.js";
 import { Colors } from "./JS/Enigmas/Colors.js";
+import { InitTp } from "./JS/Inits/InitTp.js";
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -145,7 +146,8 @@ async function Game(){
 
 	// Collision
 	let [enigmaDetectors, enigmaEntities] = await InitEnigma();
-	isShooting = await checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate);
+	let [TeleporterIn,TeleporterOut] = await InitTp();
+	isShooting = await checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger,TeleporterIn,TeleporterOut, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate);
 
 	// Beam
 	window.requestAnimationFrame(actionQueueLoop);
