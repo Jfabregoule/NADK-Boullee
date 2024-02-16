@@ -4,5 +4,5 @@ export const characterControllerSceneUUID = "9d04a662-fa10-4f3d-89f5-dfbe50e0c39
 export const objectMeshUUID = "aaecea96-f7dd-490c-80e3-7eaddf5c7cf2";
 export const mirrorSceneUUID = "304b2d8d-dc26-4c24-ae4f-20a8aa6fcab0";
 export const phantomMeshUUID = "9cd3541d-80fb-4dcb-bd15-65cc9d205e28";
-
+export const sceneRefUUID = "5cbfd358-45d9-4442-b4bf-dd1b4db5776f";
 export const code = ['1', '2', '3'];

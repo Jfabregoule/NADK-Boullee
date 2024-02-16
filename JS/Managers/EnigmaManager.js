@@ -32,6 +32,7 @@ export class EnigmaManager {
         this.enigmaEntities = [];
         this.wallOne = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall'))[0];
         this.wallTwo = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall2'))[0];
+        this.blocks = new Blocks;
     }
 
 }
