@@ -40,10 +40,10 @@ window.addEventListener("load", (event) => {
 		const canvasContainer = document.getElementById("display-canvas");
 
 		PlayCinematic();
-
+		
 		// Display Menu
 		menu.style.display = "block";
-
+		setFPSCameraController(document.getElementById("display-canvas"));
 		// Gestionnaire d'événements pour le bouton "Start"
 		startButton.addEventListener("mouseup", () => {
 
