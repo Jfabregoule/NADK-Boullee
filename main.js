@@ -143,7 +143,6 @@ async function Game(){
 	// Tags
 	await GetTags(tagged, mirrors, buttons, lights, MirrorsShoot, triggerBoxes);
 
-
 	// Collision
 	let [enigmaDetectors, enigmaEntities] = await InitEnigma();
 	isShooting = await checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate);
@@ -151,14 +150,14 @@ async function Game(){
 	// Beam
 	window.requestAnimationFrame(actionQueueLoop);
 	async function actionQueueLoop() {
-	if(!actionQueue.length) {
-		window.requestAnimationFrame(actionQueueLoop);
-		return;
-	}
+		if(!actionQueue.length) {
+			window.requestAnimationFrame(actionQueueLoop);
+			return;
+		}
 
-	const action = actionQueue.shift();
-	await action();
-	window.requestAnimationFrame(actionQueueLoop);
+		const action = actionQueue.shift();
+		await action();
+		window.requestAnimationFrame(actionQueueLoop);
 	}
 	
 	// Enemy
@@ -170,8 +169,7 @@ async function Game(){
 			if (isBehavior) {
 				enemy1.wanderLogic();
 			}
-			else
-			{
+			else {
 				enemy1.followLogic(camera);
 			}
 			window.requestAnimationFrame(boucle);
@@ -189,7 +187,7 @@ async function Game(){
 	// Grab
 	await InitGrabbable(grabbable);
 	document.addEventListener('keyup', async (event)=>{
-		if(event.key == 'f'){
+		if(event.key == 'f' || event.key == 'F'){
 			[isGrabbing, grabbedEntity] = await Grab(grabbedEntity, isGrabbing, camera, grabbable);
 			Interact(camera, buttons);
 		}
@@ -203,7 +201,7 @@ async function Game(){
 	}
 
 	document.addEventListener('keyup',(event)=>{
-		if(event.key == 'r'){
+		if(event.key == 'r' || event.key == 'R'){
 			rotateMirror();
 		}
 	})
