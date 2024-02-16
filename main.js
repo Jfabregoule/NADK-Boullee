@@ -391,18 +391,18 @@ async function Game(){
 			// Calcule de la taille du rayon
 			let FinalTransform = cameraTransform;
 			// Vérifie s'il y a des touches
-			while(touches && touches.length > 0 && (triggerBoxes.includes(touches[0].entity) || players.includes(touches[0].entity)))
+			while(touches && touches.length > 0 && (triggerBoxes.includes(touches[touches.length - 1].entity) || players.includes(touches[touches.length - 1].entity)))
 			{
-				touches.shift();
+				touches.pop();
 			}
-			if (touches[0] && touches[0].entity && mirrors.includes(touches[0].entity))
+			if (touches[touches.length - 1] && touches[touches.length - 1].entity && mirrors.includes(touches[touches.length - 1].entity))
 			{
-				let id = mirrors.findIndex(element => element === touches[0].entity);
+				let id = mirrors.findIndex(element => element === touches[touches.length - 1].entity);
 				if (MirrorsShoot[id] == false)
-					await shootMirror(touches[0].entity);
+					await shootMirror(touches[touches.length - 1].entity);
 				touches.shift();
 			}
-			if (touches && touches.length > 0 && touches[0] && touches[0].position) {
+			if (touches && touches.length > 0 && touches[touches.length - 1] && touches[touches.length - 1].position) {
 				let distance = Math.sqrt(
 					Math.pow(cameraTransform.position[0] - touches[0].position[0], 2) +
 					Math.pow(cameraTransform.position[1] - touches[0].position[1], 2) +
