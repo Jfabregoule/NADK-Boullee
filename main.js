@@ -39,10 +39,15 @@ window.addEventListener("load", (event) => {
 		const startButton = document.getElementById("startButton");
 		const canvasContainer = document.getElementById("display-canvas");
 
+		
+
+		//store camera transform to reset it later
+		const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
+		let resetCamTransform = camera.getTransform();
+		PlayCinematic();
+
 		// Display Menu
 		menu.style.display = "block";
-
-		//PlayCinematic();
 
 		// Gestionnaire d'événements pour le bouton "Start"
 		startButton.addEventListener("mouseup", () => {
@@ -57,11 +62,10 @@ window.addEventListener("load", (event) => {
 			canvasContainer.style.display = "block";
 
 			//
-			StopCinematic();
+			StopCinematic(resetCamTransform);
 
 			// Start the Game
 			Game();
-
 		});
 	});
 });
@@ -103,7 +107,7 @@ async function Game(){
 
 	//console.log("camera"+ camera);
 	// Lancer la cinématique
-	PlayCinematic(camera);
+	//PlayCinematic(camera);
 
 	const lightTemplate = new SDK3DVerse.EntityTemplate();
 	lightTemplate.attachComponent("scene_ref", { value: '5cbfd358-45d9-4442-b4bf-dd1b4db5776f' });
