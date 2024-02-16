@@ -27,7 +27,6 @@ export async function checkColls(lights, actionQueue, player, firstPersonControl
 
         else if (entering == firstPersonController && zone == FirstCinematicTrigger && !hasSeenCinematic)
         {
-            console.log("Cinematic");
             PlayCinematic();
             hasSeenCinematic = true;
         }

@@ -19,6 +19,7 @@ import { Grab } from "./JS/Grab/Grab.js";
 import { moveGrabbed } from "./JS/Grab/Move.js";
 import { ButtonEnigma } from "./JS/Enigmas/ButtonEnigma.js";
 import { InitEnigma } from "./JS/Inits/InitEnigma.js";
+import { Colors } from "./JS/Enigmas/Colors.js";
 
 /*
 ---------------------------------------------------------------------------------------------
@@ -133,33 +134,7 @@ async function Game(){
 	const wallTwo = (await SDK3DVerse.engineAPI.findEntitiesByNames('wall2'))[0];
 	const codeInteract = (await SDK3DVerse.engineAPI.findEntitiesByNames('codeInteract'))[0]
 
-	class Colors {
 
-		constructor() {
-			this.red = false;
-			this.purple = false;
-			this.light = false;
-		}
-
-		toggleRed() {
-			this.red = !this.red;
-		}
-
-		togglePurple() {
-			this.purple = !this.purple;
-		}
-
-		toggleLight() {
-			this.light = !this.light;
-		}
-
-		allTrue() {
-			if(this.red && this.purple && this.light) {
-				return true;
-			}
-			return false;
-		}
-	}
 	const colors = new Colors;
 	let code = ['1','2','3'];
 	let codeTry = []
