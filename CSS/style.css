@@ -1,0 +1,77 @@
+*,
+::after,
+::before {
+    box-sizing: border-box;
+    border-width: 0;
+}
+
+@media (max-width: 790px) {
+    html {
+        --spacing: 1.5rem;
+    }
+}
+
+body {
+	width: 100vw;
+	height: 100dvh;
+	background-color: black;
+	margin: auto;
+	display: flex;
+	font-family: "Inter", sans-serif;
+	overflow: hidden;
+}
+
+.menu {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background-color: rgba(0, 0, 0, 0.7);
+	color: white;
+	padding: 20px;
+	border-radius: 10px;
+	text-align: center;
+}
+
+.menu h1 {
+	margin-bottom: 20px;
+}
+
+.menu button {
+	padding: 10px 20px;
+	background-color: #3498db;
+	color: white;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.menu button:hover {
+	background-color: #2980b9;
+}
+
+.canvas-container {
+	display: none;
+}
+
+.canvas-container {
+	width: 100vw;
+	height: 100dvh;
+	align-items: center;
+	display: flex;
+	justify-content: center;
+	position: relative;
+}
+
+#display-canvas:hover {
+	cursor: grab;
+}
+
+#display-canvas:active {
+	cursor: grabbing;
+}
+
+#display-canvas:focus-visible {
+	outline: none;
+}
