@@ -11,7 +11,8 @@ export async function PlayCinematic(){
 
     //let transform = camera.getTransform();
     const camera = SDK3DVerse.engineAPI.cameraAPI.getActiveViewports()[0];
-    await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [200, 200, 200], camera.getTransform().rotation, 10, camera.getTransform().position, camera.getTransform().orientation);
+    await SDK3DVerse.engineAPI.cameraAPI.travel(camera, [200, 200, 200], camera.getTransform().orientation, 10, camera.getTransform().position, camera.getTransform().orientation);
+
     //let transform = { position : [100, 100, 100], orientation : [0, 0, 0, 1], scale : [1, 1, 1] }
     //camera.setTransform(transform);
     return true;
