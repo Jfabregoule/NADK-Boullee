@@ -1,32 +1,29 @@
-export async function Teleporter(enter,zone, TeleporterIn,TeleporterOut){
-    if (enter.getName() == "teleporterToRoom1"){
-        let tpCoordonnee = TeleporterOut[0].getGlobalTransform()
+export function Teleporter(zone, TeleporterIn,TeleporterOut){
+    let tpCoordonnee;
+    if (zone.getName() == "teleporterToRoom1"){
+        tpCoordonnee = TeleporterOut[0].getGlobalTransform()
     }
-    if (enter.getName() == "teleporterToRoom2"){
-        let tpCoordonnee = TeleporterOut[1].getGlobalTransform()
+    if (zone.getName() == "teleporterToRoom2"){
+        tpCoordonnee = TeleporterOut[1].getGlobalTransform()
     }
-    if (enter.getName() == "teleporterToRoom3"){
-        let tpCoordonnee = TeleporterOut[2].getGlobalTransform()
+    if (zone.getName() == "teleporterToRoom3"){
+        tpCoordonnee = TeleporterOut[2].getGlobalTransform()
     }
-    if (enter.getName() == "teleporterToRoom4"){
-        let tpCoordonnee = TeleporterOut[3].getGlobalTransform()
+    if (zone.getName() == "teleporterToRoom4"){
+        tpCoordonnee = TeleporterOut[3].getGlobalTransform()
     }
-    if (enter.getName() == "teleporterOut1"){
-        let tpCoordonnee = TeleporterOut[0].getGlobalTransform()
+    if (zone.getName() == "teleporterOut1"){
+        tpCoordonnee = TeleporterIn[0].getGlobalTransform()
     }
-    if (enter.getName() == "teleporterOut2"){
-        let tpCoordonnee = TeleporterOut[1].getGlobalTransform()
+    if (zone.getName() == "teleporterOut2"){
+        tpCoordonnee = TeleporterIn[1].getGlobalTransform()
     }
-    if (enter.getName() == "teleporterOut3"){
-        let tpCoordonnee = TeleporterOut[2].getGlobalTransform()
+    if (zone.getName() == "teleporterOut3"){
+        tpCoordonnee = TeleporterIn[2].getGlobalTransform()
     }
-    if (enter.getName() == "teleporterOut4"){
-        let tpCoordonnee = TeleporterOut[3].getGlobalTransform()
+    if (zone.getName() == "teleporterOut4"){
+        tpCoordonnee = TeleporterIn[3].getGlobalTransform()
     }
-        let Playertransform = firstPersonController.getGlobalTransform();
-        let lightTransform = zone.getGlobalTransform();
-        Playertransform.position[0] = tpCoordonnee[0];
-        Playertransform.position[1] = tpCoordonnee[1];
-        Playertransform.position[2] = tpCoordonnee[2];
-        firstPersonController.setGlobalTransform(Playertransform);
+    
+    return tpCoordonnee;
 }

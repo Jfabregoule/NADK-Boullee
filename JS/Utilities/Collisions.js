@@ -2,14 +2,20 @@ import { createfocusedbeam } from "../FocusedBeam/Create.js";
 import { destroyfocusedbeam } from "../FocusedBeam/Destroy.js";
 import { PlayCinematic } from "../Cinematic/Cinematic.js";
 import { WallEnigma } from "../Enigmas/WallEnigma.js";
+import { Teleporter } from "./Teleporter.js";
 
 export async function checkColls(lights, actionQueue, player, firstPersonController, hasSeenCinematic, FirstCinematicTrigger,TeleporterIn,TeleporterOut, enigmaDetectors, enigmaEntities, wallOne, wallTwo, grabbable, colors, focusedBeams, lightTemplate){
 
     let isShooting;
     SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) => 
     {
-        if (entering == firstPersonController && TeleporterIn.includes(zone)){
-            
+        if (entering == firstPersonController && TeleporterIn.includes(zone) || TeleporterOut.includes(zone)){
+            let tpCoordonnee = Teleporter(zone,TeleporterIn,TeleporterOut);
+            let Playertransform = firstPersonController.getGlobalTransform();
+            Playertransform.position[0] = tpCoordonnee.position[0] - 2;
+            Playertransform.position[1] = tpCoordonnee.position[1] + 2;
+            Playertransform.position[2] = tpCoordonnee.position[2];
+            firstPersonController.setGlobalTransform(Playertransform);
         }
         if (entering == firstPersonController && lights.includes(zone))
         {
