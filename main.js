@@ -278,13 +278,13 @@ async function Game(){
 
 			SDK3DVerse.engineAPI.onEnterTrigger((entering, zone) =>
 			{
-				if (entering == firstPersonController && TeleporterIn.includes(zone) || TeleporterOut.includes(zone)){
+				if (entering == player && TeleporterIn.includes(zone) || TeleporterOut.includes(zone)){
 					let tpCoordonnee = Teleporter(zone,TeleporterIn,TeleporterOut);
-					let Playertransform = firstPersonController.getGlobalTransform();
+					let Playertransform = player.getGlobalTransform();
 					Playertransform.position[0] = tpCoordonnee.position[0] - 2;
 					Playertransform.position[1] = tpCoordonnee.position[1] + 2;
 					Playertransform.position[2] = tpCoordonnee.position[2];
-					firstPersonController.setGlobalTransform(Playertransform);
+					player.setGlobalTransform(Playertransform);
 				}
 				if (entering == player && lights.includes(zone))
 				{
